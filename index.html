@@ -1,0 +1,1283 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Колесо Фортуны</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            color: #fff;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        h1 {
+            font-size: 2.8rem;
+            margin-bottom: 10px;
+            color: #ffcc00;
+            text-shadow: 0 0 10px rgba(255, 204, 0, 0.5);
+        }
+        
+        .subtitle {
+            font-size: 1.2rem;
+            color: #aaa;
+            margin-bottom: 20px;
+        }
+        
+        .app-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 30px;
+        }
+        
+        .wheel-section {
+            flex: 1;
+            min-width: 300px;
+        }
+        
+        .controls-section {
+            flex: 1;
+            min-width: 300px;
+            display: flex;
+            flex-direction: column;
+            gap: 25px;
+        }
+        
+        .panel {
+            background-color: rgba(0, 0, 0, 0.3);
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        }
+        
+        .wheel-container {
+            position: relative;
+            width: 100%;
+            max-width: 500px;
+            margin: 0 auto;
+        }
+        
+        #wheel {
+            width: 100%;
+            height: auto;
+            transition: transform 4s cubic-bezier(0.17, 0.67, 0.24, 0.99);
+            filter: drop-shadow(0 0 20px rgba(255, 204, 0, 0.3));
+            transform-origin: center center;
+        }
+        
+        .wheel-center {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 60px;
+            height: 60px;
+            background: #ffcc00;
+            border-radius: 50%;
+            border: 8px solid #1a1a2e;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.5);
+            z-index: 10;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #1a1a2e;
+            font-size: 24px;
+            font-weight: bold;
+        }
+        
+        .pointer {
+            position: absolute;
+            top: -20px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 40px;
+            height: 50px;
+            z-index: 5;
+        }
+        
+        .pointer svg {
+            fill: #ff3333;
+            filter: drop-shadow(0 5px 5px rgba(0, 0, 0, 0.5));
+        }
+        
+        .spin-button {
+            display: block;
+            margin: 30px auto;
+            padding: 18px 40px;
+            font-size: 1.3rem;
+            font-weight: bold;
+            background: linear-gradient(to right, #ffcc00, #ff9900);
+            color: #1a1a2e;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 5px 15px rgba(255, 204, 0, 0.4);
+        }
+        
+        .spin-button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(255, 204, 0, 0.6);
+        }
+        
+        .spin-button:active {
+            transform: translateY(1px);
+        }
+        
+        .spin-button:disabled {
+            background: linear-gradient(to right, #666, #888);
+            color: #aaa;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+        
+        .result {
+            text-align: center;
+            font-size: 1.8rem;
+            min-height: 60px;
+            margin-top: 20px;
+            padding: 15px;
+            background-color: rgba(0, 0, 0, 0.2);
+            border-radius: 10px;
+            border: 2px dashed rgba(255, 204, 0, 0.3);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .result-value {
+            color: #ffcc00;
+            font-weight: bold;
+            text-shadow: 0 0 5px rgba(255, 204, 0, 0.5);
+        }
+        
+        .result-index {
+            font-size: 1rem;
+            color: #aaa;
+            margin-top: 5px;
+        }
+        
+        h2 {
+            font-size: 1.6rem;
+            margin-bottom: 20px;
+            color: #ffcc00;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        h2 i {
+            font-size: 1.4rem;
+        }
+        
+        .input-group {
+            margin-bottom: 15px;
+        }
+        
+        .input-container {
+            display: flex;
+            margin-bottom: 15px;
+        }
+        
+        input {
+            flex: 1;
+            padding: 15px;
+            border: none;
+            background-color: rgba(255, 255, 255, 0.1);
+            color: white;
+            font-size: 1rem;
+        }
+        
+        input:first-child {
+            border-radius: 8px 0 0 8px;
+        }
+        
+        button {
+            padding: 15px 25px;
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background-color 0.3s;
+        }
+        
+        .btn-primary {
+            background-color: #4CAF50;
+            border-radius: 0 8px 8px 0;
+        }
+        
+        .btn-primary:hover {
+            background-color: #3d8b40;
+        }
+        
+        .values-list {
+            max-height: 250px;
+            overflow-y: auto;
+            background-color: rgba(0, 0, 0, 0.2);
+            border-radius: 8px;
+            padding: 10px;
+            margin-top: 10px;
+        }
+        
+        .value-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 15px;
+            margin-bottom: 8px;
+            background-color: rgba(255, 255, 255, 0.05);
+            border-radius: 6px;
+            transition: background-color 0.2s;
+        }
+        
+        .value-item:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+        
+        .value-text {
+            flex: 1;
+            word-break: break-word;
+            font-size: 0.95rem;
+        }
+        
+        .value-number {
+            display: inline-block;
+            width: 24px;
+            height: 24px;
+            background-color: rgba(255, 204, 0, 0.2);
+            border-radius: 50%;
+            text-align: center;
+            line-height: 24px;
+            margin-right: 10px;
+            font-size: 0.8rem;
+            font-weight: bold;
+        }
+        
+        .remove-btn {
+            background-color: rgba(255, 50, 50, 0.7);
+            color: white;
+            border: none;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-left: 10px;
+            transition: background-color 0.2s;
+            flex-shrink: 0;
+        }
+        
+        .remove-btn:hover {
+            background-color: rgba(255, 50, 50, 1);
+        }
+        
+        .empty-message {
+            text-align: center;
+            color: #888;
+            padding: 20px;
+            font-style: italic;
+        }
+        
+        .actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        
+        .action-btn {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s;
+        }
+        
+        .btn-danger {
+            background-color: rgba(255, 50, 50, 0.7);
+            color: white;
+        }
+        
+        .btn-danger:hover {
+            background-color: rgba(255, 50, 50, 0.9);
+        }
+        
+        .btn-info {
+            background-color: rgba(0, 150, 255, 0.7);
+            color: white;
+        }
+        
+        .btn-info:hover {
+            background-color: rgba(0, 150, 255, 0.9);
+        }
+        
+        .btn-warning {
+            background-color: rgba(255, 193, 7, 0.7);
+            color: #1a1a2e;
+        }
+        
+        .btn-warning:hover {
+            background-color: rgba(255, 193, 7, 0.9);
+        }
+        
+        .id-controls {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        
+        .id-input-group {
+            display: flex;
+        }
+        
+        .id-display {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 15px;
+            background-color: rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+            margin-top: 10px;
+        }
+        
+        .id-value {
+            font-family: monospace;
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #ffcc00;
+            letter-spacing: 1px;
+        }
+        
+        .copy-btn {
+            background-color: rgba(0, 150, 255, 0.7);
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        
+        .copy-btn:hover {
+            background-color: rgba(0, 150, 255, 0.9);
+        }
+        
+        .copy-btn.copied {
+            background-color: #4CAF50;
+        }
+        
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 15px 25px;
+            background-color: #4CAF50;
+            color: white;
+            border-radius: 8px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+            transform: translateX(120%);
+            transition: transform 0.3s ease-out;
+            z-index: 1000;
+        }
+        
+        .notification.show {
+            transform: translateX(0);
+        }
+        
+        .notification.error {
+            background-color: #f44336;
+        }
+        
+        .segments-info {
+            text-align: center;
+            margin-top: 10px;
+            font-size: 0.9rem;
+            color: #aaa;
+        }
+        
+        .id-suggestions {
+            margin-top: 10px;
+            font-size: 0.9rem;
+            color: #aaa;
+        }
+        
+        .id-suggestion {
+            display: inline-block;
+            background-color: rgba(255, 204, 0, 0.1);
+            padding: 4px 8px;
+            border-radius: 4px;
+            margin: 2px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        
+        .id-suggestion:hover {
+            background-color: rgba(255, 204, 0, 0.2);
+        }
+        
+        footer {
+            text-align: center;
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            color: #888;
+            font-size: 0.9rem;
+        }
+        
+        @media (max-width: 768px) {
+            .app-container {
+                flex-direction: column;
+            }
+            
+            .wheel-container {
+                max-width: 350px;
+            }
+            
+            h1 {
+                font-size: 2.2rem;
+            }
+            
+            .id-input-group {
+                flex-direction: column;
+            }
+            
+            .id-input-group input {
+                border-radius: 8px 8px 0 0 !important;
+            }
+            
+            .id-input-group button {
+                border-radius: 0 0 8px 8px !important;
+            }
+            
+            .values-list {
+                max-height: 200px;
+            }
+        }
+        
+        /* Полоса прокрутки для списка значений */
+        .values-list::-webkit-scrollbar {
+            width: 8px;
+        }
+        
+        .values-list::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 4px;
+        }
+        
+        .values-list::-webkit-scrollbar-thumb {
+            background: rgba(255, 204, 0, 0.5);
+            border-radius: 4px;
+        }
+        
+        .values-list::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 204, 0, 0.7);
+        }
+        
+        .debug-info {
+            font-size: 0.8rem;
+            color: #888;
+            text-align: center;
+            margin-top: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1><i class="fas fa-dharmachakra"></i> Колесо Фортуны с ID</h1>
+            <p class="subtitle">Создание своего ID не работает</p>
+        </header>
+        
+        <div class="app-container">
+            <section class="wheel-section">
+                <div class="wheel-container">
+                    <svg id="wheel" viewBox="0 0 500 500">
+                        <!-- Колесо будет генерироваться через JavaScript -->
+                    </svg>
+                    <div class="wheel-center">
+                        <i class="fas fa-star"></i>
+                    </div>
+                    <div class="pointer">
+                        <svg viewBox="0 0 100 100">
+                            <polygon points="50,0 65,100 35,100" />
+                        </svg>
+                    </div>
+                </div>
+                
+                <div class="segments-info">
+                    Сегментов: <span id="segmentsCount">0</span>
+                </div>
+                
+                <button id="spinButton" class="spin-button">
+                    <i class="fas fa-redo-alt"></i> Крутить колесо
+                </button>
+                
+                <div class="result">
+                    <span id="resultText">Результат появится здесь</span>
+                    <div class="result-index" id="resultIndex"></div>
+                    <div class="debug-info" id="debugInfo"></div>
+                </div>
+            </section>
+            
+            <section class="controls-section">
+                <div class="panel">
+                    <h2><i class="fas fa-id-card"></i> Управление по ID</h2>
+                    
+                    <div class="id-controls">
+                        <div class="input-group">
+                            <p>Загрузите набор значений по ID:</p>
+                            <div class="id-input-group">
+                                <input type="text" id="loadIdInput" placeholder="Введите ID набора" maxlength="20">
+                                <button id="loadBtn" class="btn-primary">
+                                    <i class="fas fa-download"></i> Загрузить
+                                </button>
+                            </div>
+                            <div class="id-suggestions">
+                                Попробуйте: 
+                                <span class="id-suggestion" data-id="EXAMPLE">EXAMPLE</span>
+                                <span class="id-suggestion" data-id="PRIZES">PRIZES</span>
+                                <span class="id-suggestion" data-id="ACTIVITY">ACTIVITY</span>
+                                <span class="id-suggestion" data-id="MANY">MANY</span>
+                                <span class="id-suggestion" data-id="TEST">TEST</span>
+                                <span class="id-suggestion" data-id="TECH">TECH</span>
+                            </div>
+                        </div>
+                        
+                        <div class="input-group">
+                            <p>Текущий ID набора:</p>
+                            <div class="id-display">
+                                <div>
+                                    <div>ID: <span class="id-value" id="currentId">---</span></div>
+                                    <small>Сохраните этот ID для загрузки набора позже</small>
+                                </div>
+                                <button id="copyIdBtn" class="copy-btn">
+                                    <i class="far fa-copy"></i> Копировать
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div class="actions">
+                            <button id="saveBtn" class="action-btn btn-info">
+                                <i class="fas fa-save"></i> Сохранить набор
+                            </button>
+                            <button id="newIdBtn" class="action-btn btn-warning">
+                                <i class="fas fa-plus"></i> Новый набор
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="panel">
+                    <h2><i class="fas fa-edit"></i> Управление значениями</h2>
+                    
+                    <div class="input-group">
+                        <p>Добавьте значение в текущий набор:</p>
+                        <div class="input-container">
+                            <input type="text" id="newValue" placeholder="Введите значение (например: Выигрыш 1000 руб.)" maxlength="100">
+                            <button id="addBtn" class="btn-primary">Добавить</button>
+                        </div>
+                        <small>Можно добавлять неограниченное количество значений</small>
+                    </div>
+                    
+                    <h3><i class="fas fa-list"></i> Список значений (<span id="valuesCount">0</span>)</h3>
+                    <div class="values-list" id="valuesList">
+                        <div class="empty-message">Пока нет значений. Добавьте первое!</div>
+                    </div>
+                    
+                    <div class="actions">
+                        <button id="clearBtn" class="action-btn btn-danger">
+                            <i class="fas fa-trash-alt"></i> Очистить всё
+                        </button>
+                        <button id="exampleBtn" class="action-btn btn-info">
+                            <i class="fas fa-magic"></i> Примеры
+                        </button>
+                    </div>
+                </div>
+            </section>
+        </div>
+        
+        <footer>
+            <p>Колесо Фортуны &copy; 2026. Все права защищены. Сайт создан - TikarTech</p>
+        </footer>
+    </div>
+
+    <div id="notification" class="notification"></div>
+
+    <script>
+        // Начальные значения
+        let values = [];
+        let currentId = null;
+        let colors = [];
+        let isSpinning = false;
+        let currentRotation = 0;
+        
+        // Генерация цветовой палитры (будет расширяться по мере необходимости)
+        function generateColors(count) {
+            const baseColors = [
+                '#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF', 
+                '#FF9F40', '#8AC926', '#1982C4', '#6A4C93', '#F15BB5',
+                '#FF595E', '#6A0572', '#00BBF9', '#00F5D4', '#FB5607',
+                '#8338EC', '#3A86FF', '#FF006E', '#FB5607', '#8338EC',
+                '#3A86FF', '#FF006E', '#06D6A0', '#118AB2', '#EF476F',
+                '#073B4C', '#7209B7', '#F72585', '#4361EE', '#4CC9F0',
+                '#B5179E', '#560BAD', '#480CA8', '#3A0CA3', '#3F37C9'
+            ];
+            
+            if (count <= baseColors.length) {
+                return baseColors.slice(0, count);
+            }
+            
+            // Если нужно больше цветов, чем есть в базовой палитре, генерируем дополнительные
+            const generatedColors = [...baseColors];
+            for (let i = baseColors.length; i < count; i++) {
+                // Генерация случайного цвета
+                const hue = Math.floor(Math.random() * 360);
+                const saturation = 70 + Math.floor(Math.random() * 20);
+                const lightness = 50 + Math.floor(Math.random() * 20);
+                generatedColors.push(`hsl(${hue}, ${saturation}%, ${lightness}%)`);
+            }
+            
+            return generatedColors;
+        }
+        
+        // Имитация базы данных (в реальном приложении это был бы сервер)
+        let wheelDatabase = {};
+        
+        // Элементы DOM
+        const wheel = document.getElementById('wheel');
+        const spinButton = document.getElementById('spinButton');
+        const resultText = document.getElementById('resultText');
+        const resultIndex = document.getElementById('resultIndex');
+        const debugInfo = document.getElementById('debugInfo');
+        const newValueInput = document.getElementById('newValue');
+        const addButton = document.getElementById('addBtn');
+        const valuesList = document.getElementById('valuesList');
+        const clearButton = document.getElementById('clearBtn');
+        const exampleButton = document.getElementById('exampleBtn');
+        const loadIdInput = document.getElementById('loadIdInput');
+        const loadButton = document.getElementById('loadBtn');
+        const saveButton = document.getElementById('saveBtn');
+        const newIdButton = document.getElementById('newIdBtn');
+        const copyIdButton = document.getElementById('copyIdBtn');
+        const currentIdDisplay = document.getElementById('currentId');
+        const valuesCount = document.getElementById('valuesCount');
+        const segmentsCount = document.getElementById('segmentsCount');
+        const notification = document.getElementById('notification');
+        
+        // Инициализация
+        document.addEventListener('DOMContentLoaded', function() {
+            // Загружаем данные из localStorage
+            loadFromLocalStorage();
+            
+            // Генерируем новый ID при первой загрузке
+            if (!currentId) {
+                generateNewId();
+            }
+            
+            renderWheel();
+            renderValuesList();
+            
+            // Обработчики событий
+            spinButton.addEventListener('click', spinWheel);
+            addButton.addEventListener('click', addValue);
+            newValueInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') addValue();
+            });
+            clearButton.addEventListener('click', clearAllValues);
+            exampleButton.addEventListener('click', loadExampleValues);
+            loadButton.addEventListener('click', loadById);
+            loadIdInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') loadById();
+            });
+            saveButton.addEventListener('click', saveWheel);
+            newIdButton.addEventListener('click', createNewWheel);
+            copyIdButton.addEventListener('click', copyIdToClipboard);
+            
+            // Добавляем обработчики для подсказок ID
+            document.querySelectorAll('.id-suggestion').forEach(suggestion => {
+                suggestion.addEventListener('click', function() {
+                    const id = this.getAttribute('data-id');
+                    loadIdInput.value = id;
+                    loadById();
+                });
+            });
+            
+            // Загружаем базу данных из localStorage
+            const savedDatabase = localStorage.getItem('wheelDatabase');
+            if (savedDatabase) {
+                wheelDatabase = JSON.parse(savedDatabase);
+            }
+            
+            // Предзагружаем примеры
+            preloadExamples();
+        });
+        
+        // Генерация нового ID
+        function generateNewId() {
+            const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+            let id = '';
+            for (let i = 0; i < 6; i++) {
+                id += chars.charAt(Math.floor(Math.random() * chars.length));
+            }
+            currentId = id;
+            currentIdDisplay.textContent = currentId;
+            return id;
+        }
+        
+        // Рендер колеса
+        function renderWheel() {
+            wheel.innerHTML = '';
+            segmentsCount.textContent = values.length;
+            
+            if (values.length === 0) {
+                // Пустое колесо
+                const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+                circle.setAttribute('cx', '250');
+                circle.setAttribute('cy', '250');
+                circle.setAttribute('r', '240');
+                circle.setAttribute('fill', '#333');
+                wheel.appendChild(circle);
+                
+                const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                text.setAttribute('x', '250');
+                text.setAttribute('y', '250');
+                text.setAttribute('text-anchor', 'middle');
+                text.setAttribute('fill', 'white');
+                text.setAttribute('font-size', '24');
+                text.textContent = 'Добавьте значения';
+                wheel.appendChild(text);
+                return;
+            }
+            
+            // Генерируем цвета для всех сегментов
+            colors = generateColors(values.length);
+            
+            const angleStep = 360 / values.length;
+            const radius = 240;
+            const centerX = 250;
+            const centerY = 250;
+            
+            for (let i = 0; i < values.length; i++) {
+                const startAngle = i * angleStep;
+                const endAngle = (i + 1) * angleStep;
+                
+                // Сегмент колеса
+                const startRad = (startAngle - 90) * Math.PI / 180;
+                const endRad = (endAngle - 90) * Math.PI / 180;
+                
+                const x1 = centerX + radius * Math.cos(startRad);
+                const y1 = centerY + radius * Math.sin(startRad);
+                const x2 = centerX + radius * Math.cos(endRad);
+                const y2 = centerY + radius * Math.sin(endRad);
+                
+                const largeArcFlag = endAngle - startAngle <= 180 ? 0 : 1;
+                
+                const pathData = [
+                    `M ${centerX} ${centerY}`,
+                    `L ${x1} ${y1}`,
+                    `A ${radius} ${radius} 0 ${largeArcFlag} 1 ${x2} ${y2}`,
+                    'Z'
+                ].join(' ');
+                
+                const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+                path.setAttribute('d', pathData);
+                path.setAttribute('fill', colors[i]);
+                path.setAttribute('stroke', '#1a1a2e');
+                path.setAttribute('stroke-width', '1');
+                path.setAttribute('data-index', i);
+                wheel.appendChild(path);
+                
+                // Для большого количества значений уменьшаем текст или скрываем
+                if (values.length <= 30) {
+                    // Текст на сегменте
+                    const textAngle = (startAngle + endAngle) / 2;
+                    const textRad = (textAngle - 90) * Math.PI / 180;
+                    
+                    // Динамический радиус для текста в зависимости от количества сегментов
+                    let textRadius = radius * 0.7;
+                    if (values.length > 20) textRadius = radius * 0.8;
+                    if (values.length > 25) textRadius = radius * 0.85;
+                    
+                    const textX = centerX + textRadius * Math.cos(textRad);
+                    const textY = centerY + textRadius * Math.sin(textRad);
+                    
+                    const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                    text.setAttribute('x', textX);
+                    text.setAttribute('y', textY);
+                    text.setAttribute('text-anchor', 'middle');
+                    text.setAttribute('fill', getContrastColor(colors[i]));
+                    text.setAttribute('font-weight', 'bold');
+                    
+                    // Динамический размер шрифта
+                    let fontSize = 16;
+                    if (values.length > 15) fontSize = 14;
+                    if (values.length > 20) fontSize = 12;
+                    if (values.length > 25) fontSize = 10;
+                    
+                    text.setAttribute('font-size', fontSize);
+                    text.setAttribute('transform', `rotate(${textAngle} ${textX} ${textY})`);
+                    
+                    // Обрезаем текст если слишком длинный
+                    let maxLength = 15;
+                    if (values.length > 15) maxLength = 10;
+                    if (values.length > 20) maxLength = 8;
+                    if (values.length > 25) maxLength = 6;
+                    
+                    // Для числовых значений отображаем просто число
+                    let textContent = values[i];
+                    if (/^\d+$/.test(values[i].trim())) {
+                        textContent = values[i].trim();
+                    } else if (textContent.length > maxLength) {
+                        textContent = textContent.substring(0, maxLength) + '...';
+                    }
+                    
+                    text.textContent = textContent;
+                    
+                    wheel.appendChild(text);
+                }
+            }
+        }
+        
+        // Функция для определения контрастного цвета текста
+        function getContrastColor(hexColor) {
+            // Если цвет в формате hsl, конвертируем в rgb
+            if (hexColor.startsWith('hsl')) {
+                // Простая логика для hsl - считаем яркость
+                const match = hexColor.match(/hsl\((\d+),\s*(\d+)%,\s*(\d+)%\)/);
+                if (match) {
+                    const lightness = parseInt(match[3]);
+                    return lightness > 50 ? '#000' : '#fff';
+                }
+            }
+            
+            // Для hex цветов
+            const hex = hexColor.replace('#', '');
+            const r = parseInt(hex.substr(0, 2), 16);
+            const g = parseInt(hex.substr(2, 2), 16);
+            const b = parseInt(hex.substr(4, 2), 16);
+            
+            // Яркость по формуле YIQ
+            const yiq = ((r * 299) + (g * 587) + (b * 114)) / 1000;
+            return (yiq >= 128) ? '#000' : '#fff';
+        }
+        
+        // Рендер списка значений
+        function renderValuesList() {
+            valuesList.innerHTML = '';
+            valuesCount.textContent = values.length;
+            
+            if (values.length === 0) {
+                valuesList.innerHTML = '<div class="empty-message">Пока нет значений. Добавьте первое!</div>';
+                return;
+            }
+            
+            values.forEach((value, index) => {
+                const item = document.createElement('div');
+                item.className = 'value-item';
+                
+                item.innerHTML = `
+                    <div class="value-text"><span class="value-number">${index + 1}</span> ${value}</div>
+                    <button class="remove-btn" data-index="${index}">
+                        <i class="fas fa-times"></i>
+                    </button>
+                `;
+                
+                valuesList.appendChild(item);
+            });
+            
+            // Добавляем обработчики для кнопок удаления
+            document.querySelectorAll('.remove-btn').forEach(button => {
+                button.addEventListener('click', function() {
+                    const index = parseInt(this.getAttribute('data-index'));
+                    removeValue(index);
+                });
+            });
+        }
+        
+        // Добавление нового значения
+        function addValue() {
+            const newValue = newValueInput.value.trim();
+            
+            if (!newValue) {
+                showNotification('Пожалуйста, введите значение', 'error');
+                return;
+            }
+            
+            // Без ограничений на количество значений!
+            values.push(newValue);
+            newValueInput.value = '';
+            renderWheel();
+            renderValuesList();
+            saveCurrentToLocalStorage();
+            
+            // Показываем информацию о количестве сегментов
+            showNotification(`Добавлено значение. Всего: ${values.length}`);
+        }
+        
+        // Удаление значения
+        function removeValue(index) {
+            const removedValue = values[index];
+            values.splice(index, 1);
+            renderWheel();
+            renderValuesList();
+            saveCurrentToLocalStorage();
+            showNotification(`Удалено: "${removedValue}"`);
+        }
+        
+        // Очистка всех значений
+        function clearAllValues() {
+            if (values.length === 0) return;
+            
+            if (confirm(`Вы уверены, что хотите удалить все ${values.length} значений?`)) {
+                values = [];
+                renderWheel();
+                renderValuesList();
+                resultText.textContent = 'Результат появится здесь';
+                resultIndex.textContent = '';
+                debugInfo.textContent = '';
+                saveCurrentToLocalStorage();
+                showNotification('Все значения удалены');
+            }
+        }
+        
+        // Загрузка примеров значений
+        function loadExampleValues() {
+            // Создаем большой примерный набор
+            const exampleValues = [
+                "Пицца", "Кино", "Ресторан", "Прогулка", "Кофе", "Книга", "Игра", "Спорт",
+                "Велосипед", "Йога", "Танцы", "Рисование", "Пение", "Готовка", "Шоппинг",
+                "Музей", "Театр", "Концерт", "Выставка", "Фестиваль", "Пикник", "Пляж",
+                "Поход", "Кемпинг", "Рыбалка", "Фотография", "Программирование", "Чтение",
+                "Письмо", "Медитация", "Садоводство", "Ремонт", "Уборка", "Обучение",
+                "Иностранный язык", "Инструмент", "Рукоделие", "Вязание", "Вышивание",
+                "Гончарное дело", "Каллиграфия", "Оригами", "Шахматы", "Пазлы", "Лего"
+            ];
+            
+            if (values.length > 0 && !confirm(`Заменить текущие ${values.length} значений примерами (${exampleValues.length} вариантов)?`)) {
+                return;
+            }
+            
+            values = [...exampleValues];
+            renderWheel();
+            renderValuesList();
+            saveCurrentToLocalStorage();
+            showNotification(`Загружены примеры значений (${exampleValues.length} вариантов)`);
+        }
+        
+        // Вращение колеса - ИСПРАВЛЕННАЯ ВЕРСИЯ
+        function spinWheel() {
+            if (isSpinning || values.length < 2) {
+                if (values.length < 2) {
+                    showNotification('Добавьте минимум 2 значения для вращения колеса', 'error');
+                }
+                return;
+            }
+            
+            isSpinning = true;
+            spinButton.disabled = true;
+            resultText.textContent = "Крутим...";
+            resultIndex.textContent = "";
+            debugInfo.textContent = "";
+            
+            // Выбираем случайный выигрышный сегмент
+            const winningSegment = Math.floor(Math.random() * values.length);
+            
+            // Угол каждого сегмента
+            const segmentAngle = 360 / values.length;
+            
+            // Указываем, что стрелка указывает вверх (0 градусов)
+            // Нам нужно, чтобы после вращения выбранный сегмент оказался вверху под стрелкой
+            // Поэтому вычисляем угол, на который нужно повернуть колесо
+            
+            // Текущий угол выбранного сегмента (его середина)
+            const targetSegmentMiddleAngle = winningSegment * segmentAngle + segmentAngle / 2;
+            
+            // Учитываем, что SVG вращается по часовой стрелке (положительное направление)
+            // и что изначально сегмент 0 находится вверху
+            // Чтобы сегмент оказался под стрелкой, нам нужно повернуть его так, 
+            // чтобы его середина была вверху (под 0 градусов)
+            
+            // Вычисляем конечный угол вращения
+            // Несколько полных оборотов + угол для позиционирования выбранного сегмента под стрелкой
+            const fullSpins = 5; // Минимум 5 полных оборотов для эффекта
+            const totalRotation = fullSpins * 360 + (360 - targetSegmentMiddleAngle);
+            
+            // Анимация вращения
+            wheel.style.transform = `rotate(${totalRotation}deg)`;
+            currentRotation = totalRotation % 360;
+            
+            // Показываем результат после завершения анимации
+            setTimeout(() => {
+                // Вычисляем, какой сегмент находится под стрелкой после вращения
+                // Стрелка указывает на 0 градусов (вверх)
+                // Колесо повернуто на currentRotation градусов
+                // Нужно найти, какой сегмент находится в позиции 0 градусов
+                
+                // Нормализуем угол вращения (0-360)
+                const normalizedRotation = (360 - (currentRotation % 360)) % 360;
+                
+                // Вычисляем индекс сегмента под стрелкой
+                const segmentIndex = Math.floor(normalizedRotation / segmentAngle) % values.length;
+                
+                // Отображаем результат
+                resultText.innerHTML = `Выпало: <span class="result-value">${values[segmentIndex]}</span>`;
+                resultIndex.textContent = `Сегмент №${segmentIndex + 1} из ${values.length}`;
+                
+                // Отладочная информация (можно скрыть для пользователей)
+                debugInfo.textContent = `Угол: ${Math.round(normalizedRotation)}°, Индекс: ${segmentIndex}`;
+                
+                isSpinning = false;
+                spinButton.disabled = false;
+                
+                // Проверка совпадения
+                if (segmentIndex === winningSegment) {
+                    console.log("✓ Совпадение: расчетный индекс совпал с выбранным");
+                } else {
+                    console.warn("⚠ Несовпадение: расчетный индекс не совпал с выбранным");
+                    // Если не совпало, корректируем отображение
+                    debugInfo.textContent += ` (ожидался: ${winningSegment})`;
+                }
+            }, 4000);
+        }
+        
+        // Загрузка набора по ID
+        function loadById() {
+            const idToLoad = loadIdInput.value.trim().toUpperCase();
+            
+            if (!idToLoad) {
+                showNotification('Введите ID для загрузки', 'error');
+                return;
+            }
+            
+            if (!wheelDatabase[idToLoad]) {
+                showNotification(`Набор с ID "${idToLoad}" не найден`, 'error');
+                return;
+            }
+            
+            if (values.length > 0 && !confirm('Текущий набор будет заменен. Продолжить?')) {
+                return;
+            }
+            
+            // Загружаем значения из базы данных
+            values = [...wheelDatabase[idToLoad].values];
+            currentId = idToLoad;
+            currentIdDisplay.textContent = currentId;
+            
+            renderWheel();
+            renderValuesList();
+            loadIdInput.value = '';
+            
+            // Сохраняем текущий ID в localStorage
+            saveCurrentToLocalStorage();
+            
+            showNotification(`Набор "${idToLoad}" успешно загружен (${values.length} значений)`);
+        }
+        
+        // Сохранение текущего набора в базу данных
+        function saveWheel() {
+            if (values.length === 0) {
+                showNotification('Нельзя сохранить пустой набор', 'error');
+                return;
+            }
+            
+            // Сохраняем в базу данных
+            wheelDatabase[currentId] = {
+                values: [...values],
+                savedAt: new Date().toISOString(),
+                count: values.length
+            };
+            
+            // Сохраняем базу данных в localStorage
+            localStorage.setItem('wheelDatabase', JSON.stringify(wheelDatabase));
+            
+            showNotification(`Набор сохранен с ID: ${currentId} (${values.length} значений)`);
+        }
+        
+        // Создание нового набора
+        function createNewWheel() {
+            if (values.length > 0 && !confirm('Создать новый набор? Текущие значения будут потеряны.')) {
+                return;
+            }
+            
+            values = [];
+            generateNewId();
+            renderWheel();
+            renderValuesList();
+            resultText.textContent = 'Результат появится здесь';
+            resultIndex.textContent = '';
+            debugInfo.textContent = '';
+            
+            showNotification('Создан новый набор');
+        }
+        
+        // Копирование ID в буфер обмена
+        function copyIdToClipboard() {
+            if (!currentId) return;
+            
+            navigator.clipboard.writeText(currentId).then(() => {
+                copyIdButton.innerHTML = '<i class="fas fa-check"></i> Скопировано';
+                copyIdButton.classList.add('copied');
+                
+                setTimeout(() => {
+                    copyIdButton.innerHTML = '<i class="far fa-copy"></i> Копировать';
+                    copyIdButton.classList.remove('copied');
+                }, 2000);
+                
+                showNotification(`ID "${currentId}" скопирован в буфер обмена`);
+            }).catch(err => {
+                showNotification('Не удалось скопировать ID', 'error');
+                console.error('Ошибка копирования: ', err);
+            });
+        }
+        
+        // Сохранение текущего набора в LocalStorage
+        function saveCurrentToLocalStorage() {
+            const data = {
+                id: currentId,
+                values: values
+            };
+            localStorage.setItem('currentWheel', JSON.stringify(data));
+        }
+        
+        // Загрузка текущего набора из LocalStorage
+        function loadFromLocalStorage() {
+            const savedData = localStorage.getItem('currentWheel');
+            if (savedData) {
+                try {
+                    const data = JSON.parse(savedData);
+                    currentId = data.id || generateNewId();
+                    values = data.values || [];
+                    currentIdDisplay.textContent = currentId;
+                } catch (e) {
+                    console.error('Ошибка загрузки из localStorage:', e);
+                    generateNewId();
+                }
+            }
+        }
+        
+        // Показать уведомление
+        function showNotification(message, type = 'success') {
+            notification.textContent = message;
+            notification.className = 'notification';
+            
+            if (type === 'error') {
+                notification.classList.add('error');
+            }
+            
+            notification.classList.add('show');
+            
+            setTimeout(() => {
+                notification.classList.remove('show');
+            }, 3000);
+        }
+        
+        // Предзагрузка нескольких примеров наборов в базу данных
+        function preloadExamples() {
+            if (!wheelDatabase['EXAMPLE']) {
+                wheelDatabase['EXAMPLE'] = {
+                    values: ["Пицца", "Кино", "Ресторан", "Прогулка", "Кофе", "Книга", "Игра", "Спорт"],
+                    savedAt: new Date().toISOString(),
+                    count: 8
+                };
+            }
+            
+            if (!wheelDatabase['PRIZES']) {
+                wheelDatabase['PRIZES'] = {
+                    values: ["Футболка", "Кружка", "Наушники", "Книга", "Билет в кино", "Скидка 50%", "Флешка", "Шоколадка", "Подарок", "Сюрприз", "Бонус", "Лотерея"],
+                    savedAt: new Date().toISOString(),
+                    count: 12
+                };
+            }
+            
+            if (!wheelDatabase['ACTIVITY']) {
+                wheelDatabase['ACTIVITY'] = {
+                    values: ["Йога", "Бег", "Велосипед", "Плавание", "Танцы", "Поход", "Скалолазание", "Фитнес", "Аэробика", "Стретчинг", "Пилатес", "Бокс", "Теннис", "Футбол", "Баскетбол", "Волейбол"],
+                    savedAt: new Date().toISOString(),
+                    count: 16
+                };
+            }
+            
+            if (!wheelDatabase['MANY']) {
+                const manyValues = [];
+                for (let i = 1; i <= 35; i++) {
+                    manyValues.push(`Вариант ${i}`);
+                }
+                wheelDatabase['MANY'] = {
+                    values: manyValues,
+                    savedAt: new Date().toISOString(),
+                    count: 35
+                };
+            }
+            
+            // Создаем тестовый набор для проверки совпадения
+            if (!wheelDatabase['TEST']) {
+                const testValues = [];
+                for (let i = 1; i <= 10; i++) {
+                    testValues.push(`Тест ${i}`);
+                }
+                wheelDatabase['TEST'] = {
+                    values: testValues,
+                    savedAt: new Date().toISOString(),
+                    count: 10
+                };
+            }
+            
+            // Создаем набор TECH с числами от 1 до 25
+            if (!wheelDatabase['TECH']) {
+                const techValues = [];
+                for (let i = 1; i <= 25; i++) {
+                    techValues.push(`${i}`);
+                }
+                wheelDatabase['TECH'] = {
+                    values: techValues,
+                    savedAt: new Date().toISOString(),
+                    count: 25,
+                    description: "Числа от 1 до 25"
+                };
+            }
+            
+            // Создаем набор NUMBERS с числами от 1 до 50
+            if (!wheelDatabase['NUMBERS']) {
+                const numbersValues = [];
+                for (let i = 1; i <= 50; i++) {
+                    numbersValues.push(`Число ${i}`);
+                }
+                wheelDatabase['NUMBERS'] = {
+                    values: numbersValues,
+                    savedAt: new Date().toISOString(),
+                    count: 50,
+                    description: "Числа от 1 до 50"
+                };
+            }
+            
+            localStorage.setItem('wheelDatabase', JSON.stringify(wheelDatabase));
+        }
+    </script>
+</body>
+</html>
