@@ -2,7 +2,9 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
     <title>Колесо Фортуны</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
@@ -11,80 +13,87 @@
             padding: 0;
             box-sizing: border-box;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            -webkit-tap-highlight-color: transparent;
         }
         
         body {
             background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
             color: #fff;
             min-height: 100vh;
-            padding: 20px;
+            padding: 10px;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
         }
         
         .container {
             max-width: 1200px;
             margin: 0 auto;
-            padding: 20px;
+            padding: 10px;
         }
         
         header {
             text-align: center;
-            margin-bottom: 30px;
-            padding-bottom: 20px;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
             border-bottom: 1px solid rgba(255, 255, 255, 0.1);
         }
         
         h1 {
-            font-size: 2.8rem;
-            margin-bottom: 10px;
+            font-size: clamp(1.8rem, 5vw, 2.8rem);
+            margin-bottom: 8px;
             color: #ffcc00;
             text-shadow: 0 0 10px rgba(255, 204, 0, 0.5);
+            line-height: 1.2;
         }
         
         .subtitle {
-            font-size: 1.2rem;
+            font-size: clamp(0.9rem, 3vw, 1.2rem);
             color: #aaa;
-            margin-bottom: 20px;
+            margin-bottom: 15px;
+            line-height: 1.4;
         }
         
         .app-container {
             display: flex;
             flex-wrap: wrap;
-            gap: 30px;
+            gap: 20px;
         }
         
         .wheel-section {
             flex: 1;
-            min-width: 300px;
+            min-width: min(100%, 300px);
         }
         
         .controls-section {
             flex: 1;
-            min-width: 300px;
+            min-width: min(100%, 300px);
             display: flex;
             flex-direction: column;
-            gap: 25px;
+            gap: 20px;
         }
         
         .panel {
             background-color: rgba(0, 0, 0, 0.3);
-            border-radius: 15px;
-            padding: 25px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
         }
         
         .wheel-container {
             position: relative;
             width: 100%;
-            max-width: 500px;
+            max-width: min(500px, 90vw, 90vh);
             margin: 0 auto;
+            aspect-ratio: 1 / 1;
         }
         
         #wheel {
             width: 100%;
-            height: auto;
+            height: 100%;
             transition: transform 4s cubic-bezier(0.17, 0.67, 0.24, 0.99);
-            filter: drop-shadow(0 0 20px rgba(255, 204, 0, 0.3));
+            filter: drop-shadow(0 0 10px rgba(255, 204, 0, 0.3));
             transform-origin: center center;
+            touch-action: none;
         }
         
         .wheel-center {
@@ -92,41 +101,41 @@
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            width: 60px;
-            height: 60px;
+            width: clamp(40px, 8vw, 60px);
+            height: clamp(40px, 8vw, 60px);
             background: #ffcc00;
             border-radius: 50%;
-            border: 8px solid #1a1a2e;
-            box-shadow: 0 0 15px rgba(0, 0, 0, 0.5);
+            border: 6px solid #1a1a2e;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
             z-index: 10;
             display: flex;
             align-items: center;
             justify-content: center;
             color: #1a1a2e;
-            font-size: 24px;
+            font-size: clamp(16px, 4vw, 24px);
             font-weight: bold;
         }
         
         .pointer {
             position: absolute;
-            top: -20px;
+            top: -15px;
             left: 50%;
             transform: translateX(-50%);
-            width: 40px;
-            height: 50px;
+            width: clamp(30px, 6vw, 40px);
+            height: clamp(35px, 7vw, 50px);
             z-index: 5;
         }
         
         .pointer svg {
             fill: #ff3333;
-            filter: drop-shadow(0 5px 5px rgba(0, 0, 0, 0.5));
+            filter: drop-shadow(0 3px 5px rgba(0, 0, 0, 0.5));
         }
         
         .spin-button {
             display: block;
-            margin: 30px auto;
-            padding: 18px 40px;
-            font-size: 1.3rem;
+            margin: 20px auto;
+            padding: clamp(14px, 4vw, 18px) clamp(30px, 8vw, 40px);
+            font-size: clamp(1.1rem, 3.5vw, 1.3rem);
             font-weight: bold;
             background: linear-gradient(to right, #ffcc00, #ff9900);
             color: #1a1a2e;
@@ -134,16 +143,16 @@
             border-radius: 50px;
             cursor: pointer;
             transition: all 0.3s;
-            box-shadow: 0 5px 15px rgba(255, 204, 0, 0.4);
+            box-shadow: 0 4px 10px rgba(255, 204, 0, 0.4);
+            min-height: 54px;
+            width: 100%;
+            max-width: 300px;
         }
         
-        .spin-button:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 8px 20px rgba(255, 204, 0, 0.6);
-        }
-        
+        .spin-button:hover,
         .spin-button:active {
-            transform: translateY(1px);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 15px rgba(255, 204, 0, 0.6);
         }
         
         .spin-button:disabled {
@@ -156,10 +165,10 @@
         
         .result {
             text-align: center;
-            font-size: 1.8rem;
-            min-height: 60px;
-            margin-top: 20px;
-            padding: 15px;
+            font-size: clamp(1.2rem, 4vw, 1.8rem);
+            min-height: 50px;
+            margin-top: 15px;
+            padding: 12px;
             background-color: rgba(0, 0, 0, 0.2);
             border-radius: 10px;
             border: 2px dashed rgba(255, 204, 0, 0.3);
@@ -167,133 +176,167 @@
             flex-direction: column;
             align-items: center;
             justify-content: center;
+            line-height: 1.3;
         }
         
         .result-value {
             color: #ffcc00;
             font-weight: bold;
             text-shadow: 0 0 5px rgba(255, 204, 0, 0.5);
+            word-break: break-word;
+            max-width: 100%;
+            padding: 0 5px;
         }
         
         .result-index {
-            font-size: 1rem;
+            font-size: clamp(0.8rem, 2.5vw, 1rem);
             color: #aaa;
             margin-top: 5px;
         }
         
         h2 {
-            font-size: 1.6rem;
-            margin-bottom: 20px;
+            font-size: clamp(1.2rem, 3.5vw, 1.6rem);
+            margin-bottom: 15px;
             color: #ffcc00;
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 8px;
+            line-height: 1.3;
         }
         
         h2 i {
-            font-size: 1.4rem;
+            font-size: clamp(1rem, 3vw, 1.4rem);
+        }
+        
+        h3 {
+            font-size: clamp(1rem, 3vw, 1.2rem);
+            margin: 15px 0 10px 0;
+            color: #ffcc00;
+            line-height: 1.3;
         }
         
         .input-group {
-            margin-bottom: 15px;
+            margin-bottom: 12px;
+        }
+        
+        .input-group p {
+            margin-bottom: 8px;
+            font-size: clamp(0.9rem, 2.5vw, 1rem);
+            line-height: 1.4;
         }
         
         .input-container {
             display: flex;
+            flex-direction: column;
+            gap: 10px;
             margin-bottom: 15px;
+        }
+        
+        @media (min-width: 480px) {
+            .input-container {
+                flex-direction: row;
+            }
         }
         
         input {
             flex: 1;
-            padding: 15px;
+            padding: clamp(12px, 3vw, 15px);
             border: none;
             background-color: rgba(255, 255, 255, 0.1);
             color: white;
-            font-size: 1rem;
+            font-size: clamp(0.9rem, 2.5vw, 1rem);
+            border-radius: 8px;
+            min-height: 50px;
+            -webkit-appearance: none;
         }
         
-        input:first-child {
-            border-radius: 8px 0 0 8px;
+        input:focus {
+            outline: 2px solid #ffcc00;
+            outline-offset: -2px;
         }
         
         button {
-            padding: 15px 25px;
+            padding: clamp(12px, 3vw, 15px) clamp(15px, 4vw, 25px);
             color: white;
             border: none;
             cursor: pointer;
             font-weight: bold;
-            transition: background-color 0.3s;
+            transition: all 0.2s;
+            font-size: clamp(0.9rem, 2.5vw, 1rem);
+            min-height: 50px;
+            border-radius: 8px;
+            touch-action: manipulation;
         }
         
         .btn-primary {
             background-color: #4CAF50;
-            border-radius: 0 8px 8px 0;
         }
         
-        .btn-primary:hover {
+        .btn-primary:hover,
+        .btn-primary:active {
             background-color: #3d8b40;
         }
         
         .values-list {
-            max-height: 250px;
+            max-height: min(250px, 40vh);
             overflow-y: auto;
             background-color: rgba(0, 0, 0, 0.2);
             border-radius: 8px;
-            padding: 10px;
-            margin-top: 10px;
+            padding: 8px;
+            margin-top: 8px;
+            -webkit-overflow-scrolling: touch;
         }
         
         .value-item {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 12px 15px;
-            margin-bottom: 8px;
+            padding: 10px 12px;
+            margin-bottom: 6px;
             background-color: rgba(255, 255, 255, 0.05);
             border-radius: 6px;
             transition: background-color 0.2s;
-        }
-        
-        .value-item:hover {
-            background-color: rgba(255, 255, 255, 0.1);
+            gap: 8px;
         }
         
         .value-text {
             flex: 1;
             word-break: break-word;
-            font-size: 0.95rem;
+            font-size: clamp(0.85rem, 2.5vw, 0.95rem);
+            line-height: 1.4;
         }
         
         .value-number {
             display: inline-block;
-            width: 24px;
-            height: 24px;
+            width: clamp(20px, 5vw, 24px);
+            height: clamp(20px, 5vw, 24px);
             background-color: rgba(255, 204, 0, 0.2);
             border-radius: 50%;
             text-align: center;
-            line-height: 24px;
-            margin-right: 10px;
-            font-size: 0.8rem;
+            line-height: clamp(20px, 5vw, 24px);
+            margin-right: 8px;
+            font-size: clamp(0.7rem, 2vw, 0.8rem);
             font-weight: bold;
+            flex-shrink: 0;
         }
         
         .remove-btn {
             background-color: rgba(255, 50, 50, 0.7);
             color: white;
             border: none;
-            width: 30px;
-            height: 30px;
+            width: clamp(28px, 6vw, 30px);
+            height: clamp(28px, 6vw, 30px);
             border-radius: 50%;
             cursor: pointer;
             display: flex;
             align-items: center;
             justify-content: center;
-            margin-left: 10px;
-            transition: background-color 0.2s;
             flex-shrink: 0;
+            font-size: clamp(12px, 3vw, 14px);
         }
         
-        .remove-btn:hover {
+        .remove-btn:hover,
+        .remove-btn:active {
             background-color: rgba(255, 50, 50, 1);
         }
         
@@ -302,22 +345,40 @@
             color: #888;
             padding: 20px;
             font-style: italic;
+            font-size: clamp(0.9rem, 2.5vw, 1rem);
         }
         
         .actions {
             display: flex;
+            flex-direction: column;
             gap: 10px;
-            margin-top: 20px;
+            margin-top: 15px;
+        }
+        
+        @media (min-width: 480px) {
+            .actions {
+                flex-direction: row;
+            }
         }
         
         .action-btn {
             flex: 1;
-            padding: 12px;
+            padding: clamp(10px, 2.5vw, 12px);
             border: none;
             border-radius: 8px;
             cursor: pointer;
             font-weight: bold;
             transition: all 0.3s;
+            min-height: 44px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            font-size: clamp(0.85rem, 2.5vw, 0.95rem);
+        }
+        
+        .action-btn i {
+            font-size: clamp(14px, 3vw, 16px);
         }
         
         .btn-danger {
@@ -325,7 +386,8 @@
             color: white;
         }
         
-        .btn-danger:hover {
+        .btn-danger:hover,
+        .btn-danger:active {
             background-color: rgba(255, 50, 50, 0.9);
         }
         
@@ -334,7 +396,8 @@
             color: white;
         }
         
-        .btn-info:hover {
+        .btn-info:hover,
+        .btn-info:active {
             background-color: rgba(0, 150, 255, 0.9);
         }
         
@@ -343,36 +406,55 @@
             color: #1a1a2e;
         }
         
-        .btn-warning:hover {
+        .btn-warning:hover,
+        .btn-warning:active {
             background-color: rgba(255, 193, 7, 0.9);
         }
         
         .id-controls {
             display: flex;
             flex-direction: column;
-            gap: 15px;
+            gap: 12px;
         }
         
         .id-input-group {
             display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        
+        @media (min-width: 480px) {
+            .id-input-group {
+                flex-direction: row;
+            }
         }
         
         .id-display {
             display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 15px;
+            flex-direction: column;
+            gap: 10px;
+            align-items: flex-start;
+            padding: 12px;
             background-color: rgba(255, 255, 255, 0.05);
             border-radius: 8px;
-            margin-top: 10px;
+            margin-top: 8px;
+        }
+        
+        @media (min-width: 480px) {
+            .id-display {
+                flex-direction: row;
+                align-items: center;
+                justify-content: space-between;
+            }
         }
         
         .id-value {
             font-family: monospace;
-            font-size: 1.2rem;
+            font-size: clamp(1rem, 3vw, 1.2rem);
             font-weight: bold;
             color: #ffcc00;
             letter-spacing: 1px;
+            word-break: break-all;
         }
         
         .copy-btn {
@@ -382,9 +464,15 @@
             padding: 8px 15px;
             border-radius: 5px;
             cursor: pointer;
+            font-size: clamp(0.85rem, 2.5vw, 0.95rem);
+            min-height: 36px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
         }
         
-        .copy-btn:hover {
+        .copy-btn:hover,
+        .copy-btn:active {
             background-color: rgba(0, 150, 255, 0.9);
         }
         
@@ -395,19 +483,31 @@
         .notification {
             position: fixed;
             top: 20px;
-            right: 20px;
-            padding: 15px 25px;
+            right: 10px;
+            left: 10px;
+            padding: 15px 20px;
             background-color: #4CAF50;
             color: white;
             border-radius: 8px;
             box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
-            transform: translateX(120%);
+            transform: translateY(-100px);
             transition: transform 0.3s ease-out;
             z-index: 1000;
+            text-align: center;
+            max-width: 400px;
+            margin: 0 auto;
+        }
+        
+        @media (min-width: 480px) {
+            .notification {
+                right: 20px;
+                left: auto;
+                max-width: 300px;
+            }
         }
         
         .notification.show {
-            transform: translateX(0);
+            transform: translateY(0);
         }
         
         .notification.error {
@@ -416,100 +516,159 @@
         
         .segments-info {
             text-align: center;
-            margin-top: 10px;
-            font-size: 0.9rem;
+            margin-top: 8px;
+            font-size: clamp(0.8rem, 2.5vw, 0.9rem);
             color: #aaa;
         }
         
         .id-suggestions {
-            margin-top: 10px;
-            font-size: 0.9rem;
+            margin-top: 8px;
+            font-size: clamp(0.8rem, 2.5vw, 0.9rem);
             color: #aaa;
+            line-height: 1.4;
         }
         
         .id-suggestion {
             display: inline-block;
             background-color: rgba(255, 204, 0, 0.1);
-            padding: 4px 8px;
+            padding: 3px 6px;
             border-radius: 4px;
             margin: 2px;
             cursor: pointer;
             transition: background-color 0.2s;
+            font-size: clamp(0.75rem, 2vw, 0.85rem);
         }
         
-        .id-suggestion:hover {
+        .id-suggestion:hover,
+        .id-suggestion:active {
             background-color: rgba(255, 204, 0, 0.2);
         }
         
         footer {
             text-align: center;
-            margin-top: 40px;
-            padding-top: 20px;
+            margin-top: 30px;
+            padding-top: 15px;
             border-top: 1px solid rgba(255, 255, 255, 0.1);
             color: #888;
-            font-size: 0.9rem;
+            font-size: clamp(0.8rem, 2.5vw, 0.9rem);
+            line-height: 1.4;
         }
         
-        @media (max-width: 768px) {
+        .debug-info {
+            font-size: clamp(0.7rem, 2vw, 0.8rem);
+            color: #888;
+            text-align: center;
+            margin-top: 5px;
+        }
+        
+        /* Мобильная оптимизация */
+        @media (max-width: 479px) {
+            .container {
+                padding: 5px;
+            }
+            
+            .panel {
+                padding: 15px;
+            }
+            
+            .spin-button {
+                margin: 15px auto;
+                min-height: 48px;
+            }
+            
+            .value-item {
+                padding: 8px 10px;
+            }
+        }
+        
+        @media (max-width: 359px) {
+            h1 {
+                font-size: 1.6rem;
+            }
+            
+            .spin-button {
+                font-size: 1rem;
+                padding: 12px 20px;
+            }
+            
+            .panel {
+                padding: 12px;
+            }
+        }
+        
+        /* Пейзажная ориентация */
+        @media (max-height: 500px) and (orientation: landscape) {
+            body {
+                padding: 5px;
+            }
+            
             .app-container {
-                flex-direction: column;
+                flex-direction: row;
+                gap: 10px;
             }
             
             .wheel-container {
-                max-width: 350px;
-            }
-            
-            h1 {
-                font-size: 2.2rem;
-            }
-            
-            .id-input-group {
-                flex-direction: column;
-            }
-            
-            .id-input-group input {
-                border-radius: 8px 8px 0 0 !important;
-            }
-            
-            .id-input-group button {
-                border-radius: 0 0 8px 8px !important;
+                max-width: min(40vh, 250px);
             }
             
             .values-list {
-                max-height: 200px;
+                max-height: 150px;
+            }
+            
+            .spin-button {
+                margin: 10px auto;
+                padding: 10px 20px;
+                font-size: 1rem;
             }
         }
         
         /* Полоса прокрутки для списка значений */
         .values-list::-webkit-scrollbar {
-            width: 8px;
+            width: 6px;
         }
         
         .values-list::-webkit-scrollbar-track {
             background: rgba(255, 255, 255, 0.05);
-            border-radius: 4px;
+            border-radius: 3px;
         }
         
         .values-list::-webkit-scrollbar-thumb {
             background: rgba(255, 204, 0, 0.5);
-            border-radius: 4px;
+            border-radius: 3px;
         }
         
         .values-list::-webkit-scrollbar-thumb:hover {
             background: rgba(255, 204, 0, 0.7);
         }
         
-        .debug-info {
-            font-size: 0.8rem;
-            color: #888;
-            text-align: center;
-            margin-top: 5px;
+        /* Улучшения для iOS */
+        @supports (-webkit-touch-callout: none) {
+            .spin-button,
+            button,
+            input,
+            .action-btn {
+                cursor: pointer;
+            }
+            
+            input {
+                font-size: 16px; /* Предотвращает автоматическое увеличение на iOS */
+            }
+        }
+        
+        /* Предотвращение выделения на тапах */
+        .no-select {
+            -webkit-touch-callout: none;
+            -webkit-user-select: none;
+            -khtml-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <header>
+        <header class="no-select">
             <h1><i class="fas fa-dharmachakra"></i> Колесо Фортуны</h1>
             <p class="subtitle">Сайт создан гражданином Российской Федерации</p>
         </header>
@@ -517,7 +676,7 @@
         <div class="app-container">
             <section class="wheel-section">
                 <div class="wheel-container">
-                    <svg id="wheel" viewBox="0 0 500 500">
+                    <svg id="wheel" viewBox="0 0 500 500" class="no-select">
                         <!-- Колесо будет генерироваться через JavaScript -->
                     </svg>
                     <div class="wheel-center">
@@ -530,12 +689,12 @@
                     </div>
                 </div>
                 
-                <div class="segments-info">
+                <div class="segments-info no-select">
                     Сегментов: <span id="segmentsCount">0</span>
                 </div>
                 
-                <button id="spinButton" class="spin-button">
-                    <i class="fas fa-redo-alt"></i> Крутить колесо
+                <button id="spinButton" class="spin-button no-select">
+                    <i class="fas fa-redo-alt"></i> <span class="btn-text">Крутить колесо</span>
                 </button>
                 
                 <div class="result">
@@ -547,7 +706,7 @@
             
             <section class="controls-section">
                 <div class="panel">
-                    <h2><i class="fas fa-id-card"></i> Управление по ID</h2>
+                    <h2 class="no-select"><i class="fas fa-id-card"></i> Управление по ID</h2>
                     
                     <div class="id-controls">
                         <div class="input-group">
@@ -555,17 +714,14 @@
                             <div class="id-input-group">
                                 <input type="text" id="loadIdInput" placeholder="Введите ID набора" maxlength="20">
                                 <button id="loadBtn" class="btn-primary">
-                                    <i class="fas fa-download"></i> Загрузить
+                                    <i class="fas fa-download"></i> <span class="btn-text">Загрузить</span>
                                 </button>
                             </div>
-                            <div class="id-suggestions">
+                            <div class="id-suggestions no-select">
                                 Попробуйте: 
                                 <span class="id-suggestion" data-id="EXAMPLE">EXAMPLE</span>
                                 <span class="id-suggestion" data-id="PRIZES">PRIZES</span>
                                 <span class="id-suggestion" data-id="ACTIVITY">ACTIVITY</span>
-                                <span class="id-suggestion" data-id="MANY">MANY</span>
-                                <span class="id-suggestion" data-id="TEST">TEST</span>
-                                <span class="id-suggestion" data-id="TECH">TECH</span>
                             </div>
                         </div>
                         
@@ -576,53 +732,55 @@
                                     <div>ID: <span class="id-value" id="currentId">---</span></div>
                                     <small>Сохраните этот ID для загрузки набора позже</small>
                                 </div>
-                                <button id="copyIdBtn" class="copy-btn">
-                                    <i class="far fa-copy"></i> Копировать
+                                <button id="copyIdBtn" class="copy-btn no-select">
+                                    <i class="far fa-copy"></i> <span class="btn-text">Копировать</span>
                                 </button>
                             </div>
                         </div>
                         
                         <div class="actions">
-                            <button id="saveBtn" class="action-btn btn-info">
-                                <i class="fas fa-save"></i> Сохранить набор
+                            <button id="saveBtn" class="action-btn btn-info no-select">
+                                <i class="fas fa-save"></i> <span class="btn-text">Сохранить</span>
                             </button>
-                            <button id="newIdBtn" class="action-btn btn-warning">
-                                <i class="fas fa-plus"></i> Новый набор
+                            <button id="newIdBtn" class="action-btn btn-warning no-select">
+                                <i class="fas fa-plus"></i> <span class="btn-text">Новый набор</span>
                             </button>
                         </div>
                     </div>
                 </div>
                 
                 <div class="panel">
-                    <h2><i class="fas fa-edit"></i> Управление значениями</h2>
+                    <h2 class="no-select"><i class="fas fa-edit"></i> Управление значениями</h2>
                     
                     <div class="input-group">
                         <p>Добавьте значение в текущий набор:</p>
                         <div class="input-container">
-                            <input type="text" id="newValue" placeholder="Введите значение (например: Выигрыш 1000 руб.)" maxlength="100">
-                            <button id="addBtn" class="btn-primary">Добавить</button>
+                            <input type="text" id="newValue" placeholder="Введите значение" maxlength="100">
+                            <button id="addBtn" class="btn-primary">
+                                <i class="fas fa-plus"></i> <span class="btn-text">Добавить</span>
+                            </button>
                         </div>
                         <small>Можно добавлять неограниченное количество значений</small>
                     </div>
                     
-                    <h3><i class="fas fa-list"></i> Список значений (<span id="valuesCount">0</span>)</h3>
+                    <h3 class="no-select"><i class="fas fa-list"></i> Список значений (<span id="valuesCount">0</span>)</h3>
                     <div class="values-list" id="valuesList">
                         <div class="empty-message">Пока нет значений. Добавьте первое!</div>
                     </div>
                     
                     <div class="actions">
-                        <button id="clearBtn" class="action-btn btn-danger">
-                            <i class="fas fa-trash-alt"></i> Очистить всё
+                        <button id="clearBtn" class="action-btn btn-danger no-select">
+                            <i class="fas fa-trash-alt"></i> <span class="btn-text">Очистить всё</span>
                         </button>
-                        <button id="exampleBtn" class="action-btn btn-info">
-                            <i class="fas fa-magic"></i> Примеры
+                        <button id="exampleBtn" class="action-btn btn-info no-select">
+                            <i class="fas fa-magic"></i> <span class="btn-text">Примеры</span>
                         </button>
                     </div>
                 </div>
             </section>
         </div>
         
-        <footer>
+        <footer class="no-select">
             <p>Колесо Фортуны &copy; 2026. Все права защищены. Сайт создан - TikarTech</p>
         </footer>
     </div>
@@ -630,6 +788,16 @@
     <div id="notification" class="notification"></div>
 
     <script>
+        // Добавляем обработчик для предотвращения масштабирования при двойном тапе
+        let lastTouchEnd = 0;
+        document.addEventListener('touchend', function(event) {
+            const now = (new Date()).getTime();
+            if (now - lastTouchEnd <= 300) {
+                event.preventDefault();
+            }
+            lastTouchEnd = now;
+        }, false);
+
         // Начальные значения
         let values = [];
         let currentId = null;
@@ -637,26 +805,21 @@
         let isSpinning = false;
         let currentRotation = 0;
         
-        // Генерация цветовой палитры (будет расширяться по мере необходимости)
+        // Генерация цветовой палитры
         function generateColors(count) {
             const baseColors = [
                 '#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF', 
                 '#FF9F40', '#8AC926', '#1982C4', '#6A4C93', '#F15BB5',
                 '#FF595E', '#6A0572', '#00BBF9', '#00F5D4', '#FB5607',
-                '#8338EC', '#3A86FF', '#FF006E', '#FB5607', '#8338EC',
-                '#3A86FF', '#FF006E', '#06D6A0', '#118AB2', '#EF476F',
-                '#073B4C', '#7209B7', '#F72585', '#4361EE', '#4CC9F0',
-                '#B5179E', '#560BAD', '#480CA8', '#3A0CA3', '#3F37C9'
+                '#8338EC', '#3A86FF', '#FF006E', '#06D6A0', '#118AB2'
             ];
             
             if (count <= baseColors.length) {
                 return baseColors.slice(0, count);
             }
             
-            // Если нужно больше цветов, чем есть в базовой палитре, генерируем дополнительные
             const generatedColors = [...baseColors];
             for (let i = baseColors.length; i < count; i++) {
-                // Генерация случайного цвета
                 const hue = Math.floor(Math.random() * 360);
                 const saturation = 70 + Math.floor(Math.random() * 20);
                 const lightness = 50 + Math.floor(Math.random() * 20);
@@ -666,7 +829,7 @@
             return generatedColors;
         }
         
-        // Имитация базы данных (в реальном приложении это был бы сервер)
+        // Имитация базы данных
         let wheelDatabase = {};
         
         // Элементы DOM
@@ -695,7 +858,6 @@
             // Загружаем данные из localStorage
             loadFromLocalStorage();
             
-            // Генерируем новый ID при первой загрузке
             if (!currentId) {
                 generateNewId();
             }
@@ -719,7 +881,7 @@
             newIdButton.addEventListener('click', createNewWheel);
             copyIdButton.addEventListener('click', copyIdToClipboard);
             
-            // Добавляем обработчики для подсказок ID
+            // Обработчики для подсказок ID
             document.querySelectorAll('.id-suggestion').forEach(suggestion => {
                 suggestion.addEventListener('click', function() {
                     const id = this.getAttribute('data-id');
@@ -736,7 +898,31 @@
             
             // Предзагружаем примеры
             preloadExamples();
+            
+            // Адаптация для мобильных устройств
+            setupMobileOptimizations();
         });
+        
+        function setupMobileOptimizations() {
+            // Улучшение реакции на тапы
+            const buttons = document.querySelectorAll('button');
+            buttons.forEach(button => {
+                button.addEventListener('touchstart', function() {
+                    this.style.transform = 'scale(0.98)';
+                });
+                
+                button.addEventListener('touchend', function() {
+                    this.style.transform = '';
+                });
+            });
+            
+            // Закрытие клавиатуры при клике вне поля ввода
+            document.addEventListener('touchstart', function(e) {
+                if (e.target.tagName !== 'INPUT' && e.target.tagName !== 'TEXTAREA') {
+                    document.activeElement.blur();
+                }
+            });
+        }
         
         // Генерация нового ID
         function generateNewId() {
@@ -756,7 +942,6 @@
             segmentsCount.textContent = values.length;
             
             if (values.length === 0) {
-                // Пустое колесо
                 const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
                 circle.setAttribute('cx', '250');
                 circle.setAttribute('cy', '250');
@@ -769,15 +954,13 @@
                 text.setAttribute('y', '250');
                 text.setAttribute('text-anchor', 'middle');
                 text.setAttribute('fill', 'white');
-                text.setAttribute('font-size', '24');
+                text.setAttribute('font-size', '20');
                 text.textContent = 'Добавьте значения';
                 wheel.appendChild(text);
                 return;
             }
             
-            // Генерируем цвета для всех сегментов
             colors = generateColors(values.length);
-            
             const angleStep = 360 / values.length;
             const radius = 240;
             const centerX = 250;
@@ -787,7 +970,6 @@
                 const startAngle = i * angleStep;
                 const endAngle = (i + 1) * angleStep;
                 
-                // Сегмент колеса
                 const startRad = (startAngle - 90) * Math.PI / 180;
                 const endRad = (endAngle - 90) * Math.PI / 180;
                 
@@ -813,16 +995,13 @@
                 path.setAttribute('data-index', i);
                 wheel.appendChild(path);
                 
-                // Для большого количества значений уменьшаем текст или скрываем
-                if (values.length <= 30) {
-                    // Текст на сегменте
+                if (values.length <= 25) {
                     const textAngle = (startAngle + endAngle) / 2;
                     const textRad = (textAngle - 90) * Math.PI / 180;
                     
-                    // Динамический радиус для текста в зависимости от количества сегментов
                     let textRadius = radius * 0.7;
+                    if (values.length > 15) textRadius = radius * 0.75;
                     if (values.length > 20) textRadius = radius * 0.8;
-                    if (values.length > 25) textRadius = radius * 0.85;
                     
                     const textX = centerX + textRadius * Math.cos(textRad);
                     const textY = centerY + textRadius * Math.sin(textRad);
@@ -834,22 +1013,18 @@
                     text.setAttribute('fill', getContrastColor(colors[i]));
                     text.setAttribute('font-weight', 'bold');
                     
-                    // Динамический размер шрифта
-                    let fontSize = 16;
-                    if (values.length > 15) fontSize = 14;
-                    if (values.length > 20) fontSize = 12;
-                    if (values.length > 25) fontSize = 10;
+                    let fontSize = 14;
+                    if (values.length > 12) fontSize = 12;
+                    if (values.length > 18) fontSize = 10;
+                    if (values.length > 22) fontSize = 8;
                     
                     text.setAttribute('font-size', fontSize);
                     text.setAttribute('transform', `rotate(${textAngle} ${textX} ${textY})`);
                     
-                    // Обрезаем текст если слишком длинный
-                    let maxLength = 15;
+                    let maxLength = 12;
                     if (values.length > 15) maxLength = 10;
                     if (values.length > 20) maxLength = 8;
-                    if (values.length > 25) maxLength = 6;
                     
-                    // Для числовых значений отображаем просто число
                     let textContent = values[i];
                     if (/^\d+$/.test(values[i].trim())) {
                         textContent = values[i].trim();
@@ -858,17 +1033,13 @@
                     }
                     
                     text.textContent = textContent;
-                    
                     wheel.appendChild(text);
                 }
             }
         }
         
-        // Функция для определения контрастного цвета текста
         function getContrastColor(hexColor) {
-            // Если цвет в формате hsl, конвертируем в rgb
             if (hexColor.startsWith('hsl')) {
-                // Простая логика для hsl - считаем яркость
                 const match = hexColor.match(/hsl\((\d+),\s*(\d+)%,\s*(\d+)%\)/);
                 if (match) {
                     const lightness = parseInt(match[3]);
@@ -876,18 +1047,14 @@
                 }
             }
             
-            // Для hex цветов
             const hex = hexColor.replace('#', '');
             const r = parseInt(hex.substr(0, 2), 16);
             const g = parseInt(hex.substr(2, 2), 16);
             const b = parseInt(hex.substr(4, 2), 16);
-            
-            // Яркость по формуле YIQ
             const yiq = ((r * 299) + (g * 587) + (b * 114)) / 1000;
             return (yiq >= 128) ? '#000' : '#fff';
         }
         
-        // Рендер списка значений
         function renderValuesList() {
             valuesList.innerHTML = '';
             valuesCount.textContent = values.length;
@@ -911,7 +1078,6 @@
                 valuesList.appendChild(item);
             });
             
-            // Добавляем обработчики для кнопок удаления
             document.querySelectorAll('.remove-btn').forEach(button => {
                 button.addEventListener('click', function() {
                     const index = parseInt(this.getAttribute('data-index'));
@@ -920,7 +1086,6 @@
             });
         }
         
-        // Добавление нового значения
         function addValue() {
             const newValue = newValueInput.value.trim();
             
@@ -929,18 +1094,18 @@
                 return;
             }
             
-            // Без ограничений на количество значений!
             values.push(newValue);
             newValueInput.value = '';
             renderWheel();
             renderValuesList();
             saveCurrentToLocalStorage();
             
-            // Показываем информацию о количестве сегментов
             showNotification(`Добавлено значение. Всего: ${values.length}`);
+            
+            // Фокус остается на поле ввода для быстрого добавления
+            setTimeout(() => newValueInput.focus(), 100);
         }
         
-        // Удаление значения
         function removeValue(index) {
             const removedValue = values[index];
             values.splice(index, 1);
@@ -950,7 +1115,6 @@
             showNotification(`Удалено: "${removedValue}"`);
         }
         
-        // Очистка всех значений
         function clearAllValues() {
             if (values.length === 0) return;
             
@@ -966,17 +1130,10 @@
             }
         }
         
-        // Загрузка примеров значений
         function loadExampleValues() {
-            // Создаем большой примерный набор
             const exampleValues = [
                 "Пицца", "Кино", "Ресторан", "Прогулка", "Кофе", "Книга", "Игра", "Спорт",
-                "Велосипед", "Йога", "Танцы", "Рисование", "Пение", "Готовка", "Шоппинг",
-                "Музей", "Театр", "Концерт", "Выставка", "Фестиваль", "Пикник", "Пляж",
-                "Поход", "Кемпинг", "Рыбалка", "Фотография", "Программирование", "Чтение",
-                "Письмо", "Медитация", "Садоводство", "Ремонт", "Уборка", "Обучение",
-                "Иностранный язык", "Инструмент", "Рукоделие", "Вязание", "Вышивание",
-                "Гончарное дело", "Каллиграфия", "Оригами", "Шахматы", "Пазлы", "Лего"
+                "Велосипед", "Йога", "Танцы", "Рисование", "Пение", "Готовка", "Шоппинг"
             ];
             
             if (values.length > 0 && !confirm(`Заменить текущие ${values.length} значений примерами (${exampleValues.length} вариантов)?`)) {
@@ -990,7 +1147,6 @@
             showNotification(`Загружены примеры значений (${exampleValues.length} вариантов)`);
         }
         
-        // Вращение колеса - ИСПРАВЛЕННАЯ ВЕРСИЯ
         function spinWheel() {
             if (isSpinning || values.length < 2) {
                 if (values.length < 2) {
@@ -1005,68 +1161,28 @@
             resultIndex.textContent = "";
             debugInfo.textContent = "";
             
-            // Выбираем случайный выигрышный сегмент
             const winningSegment = Math.floor(Math.random() * values.length);
-            
-            // Угол каждого сегмента
             const segmentAngle = 360 / values.length;
-            
-            // Указываем, что стрелка указывает вверх (0 градусов)
-            // Нам нужно, чтобы после вращения выбранный сегмент оказался вверху под стрелкой
-            // Поэтому вычисляем угол, на который нужно повернуть колесо
-            
-            // Текущий угол выбранного сегмента (его середина)
             const targetSegmentMiddleAngle = winningSegment * segmentAngle + segmentAngle / 2;
-            
-            // Учитываем, что SVG вращается по часовой стрелке (положительное направление)
-            // и что изначально сегмент 0 находится вверху
-            // Чтобы сегмент оказался под стрелкой, нам нужно повернуть его так, 
-            // чтобы его середина была вверху (под 0 градусов)
-            
-            // Вычисляем конечный угол вращения
-            // Несколько полных оборотов + угол для позиционирования выбранного сегмента под стрелкой
-            const fullSpins = 5; // Минимум 5 полных оборотов для эффекта
+            const fullSpins = 5;
             const totalRotation = fullSpins * 360 + (360 - targetSegmentMiddleAngle);
             
-            // Анимация вращения
             wheel.style.transform = `rotate(${totalRotation}deg)`;
             currentRotation = totalRotation % 360;
             
-            // Показываем результат после завершения анимации
             setTimeout(() => {
-                // Вычисляем, какой сегмент находится под стрелкой после вращения
-                // Стрелка указывает на 0 градусов (вверх)
-                // Колесо повернуто на currentRotation градусов
-                // Нужно найти, какой сегмент находится в позиции 0 градусов
-                
-                // Нормализуем угол вращения (0-360)
                 const normalizedRotation = (360 - (currentRotation % 360)) % 360;
-                
-                // Вычисляем индекс сегмента под стрелкой
                 const segmentIndex = Math.floor(normalizedRotation / segmentAngle) % values.length;
                 
-                // Отображаем результат
                 resultText.innerHTML = `Выпало: <span class="result-value">${values[segmentIndex]}</span>`;
                 resultIndex.textContent = `Сегмент №${segmentIndex + 1} из ${values.length}`;
-                
-                // Отладочная информация (можно скрыть для пользователей)
                 debugInfo.textContent = `Угол: ${Math.round(normalizedRotation)}°, Индекс: ${segmentIndex}`;
                 
                 isSpinning = false;
                 spinButton.disabled = false;
-                
-                // Проверка совпадения
-                if (segmentIndex === winningSegment) {
-                    console.log("✓ Совпадение: расчетный индекс совпал с выбранным");
-                } else {
-                    console.warn("⚠ Несовпадение: расчетный индекс не совпал с выбранным");
-                    // Если не совпало, корректируем отображение
-                    debugInfo.textContent += ` (ожидался: ${winningSegment})`;
-                }
             }, 4000);
         }
         
-        // Загрузка набора по ID
         function loadById() {
             const idToLoad = loadIdInput.value.trim().toUpperCase();
             
@@ -1084,7 +1200,6 @@
                 return;
             }
             
-            // Загружаем значения из базы данных
             values = [...wheelDatabase[idToLoad].values];
             currentId = idToLoad;
             currentIdDisplay.textContent = currentId;
@@ -1092,34 +1207,27 @@
             renderWheel();
             renderValuesList();
             loadIdInput.value = '';
-            
-            // Сохраняем текущий ID в localStorage
             saveCurrentToLocalStorage();
             
             showNotification(`Набор "${idToLoad}" успешно загружен (${values.length} значений)`);
         }
         
-        // Сохранение текущего набора в базу данных
         function saveWheel() {
             if (values.length === 0) {
                 showNotification('Нельзя сохранить пустой набор', 'error');
                 return;
             }
             
-            // Сохраняем в базу данных
             wheelDatabase[currentId] = {
                 values: [...values],
                 savedAt: new Date().toISOString(),
                 count: values.length
             };
             
-            // Сохраняем базу данных в localStorage
             localStorage.setItem('wheelDatabase', JSON.stringify(wheelDatabase));
-            
             showNotification(`Набор сохранен с ID: ${currentId} (${values.length} значений)`);
         }
         
-        // Создание нового набора
         function createNewWheel() {
             if (values.length > 0 && !confirm('Создать новый набор? Текущие значения будут потеряны.')) {
                 return;
@@ -1136,27 +1244,51 @@
             showNotification('Создан новый набор');
         }
         
-        // Копирование ID в буфер обмена
         function copyIdToClipboard() {
             if (!currentId) return;
             
-            navigator.clipboard.writeText(currentId).then(() => {
-                copyIdButton.innerHTML = '<i class="fas fa-check"></i> Скопировано';
-                copyIdButton.classList.add('copied');
-                
-                setTimeout(() => {
-                    copyIdButton.innerHTML = '<i class="far fa-copy"></i> Копировать';
-                    copyIdButton.classList.remove('copied');
-                }, 2000);
-                
-                showNotification(`ID "${currentId}" скопирован в буфер обмена`);
-            }).catch(err => {
-                showNotification('Не удалось скопировать ID', 'error');
-                console.error('Ошибка копирования: ', err);
-            });
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(currentId).then(() => {
+                    copyIdButton.innerHTML = '<i class="fas fa-check"></i> <span class="btn-text">Скопировано</span>';
+                    copyIdButton.classList.add('copied');
+                    
+                    setTimeout(() => {
+                        copyIdButton.innerHTML = '<i class="far fa-copy"></i> <span class="btn-text">Копировать</span>';
+                        copyIdButton.classList.remove('copied');
+                    }, 2000);
+                    
+                    showNotification(`ID "${currentId}" скопирован`);
+                }).catch(err => {
+                    fallbackCopyToClipboard();
+                });
+            } else {
+                fallbackCopyToClipboard();
+            }
         }
         
-        // Сохранение текущего набора в LocalStorage
+        function fallbackCopyToClipboard() {
+            const textArea = document.createElement("textarea");
+            textArea.value = currentId;
+            textArea.style.position = "fixed";
+            textArea.style.opacity = "0";
+            document.body.appendChild(textArea);
+            textArea.focus();
+            textArea.select();
+            
+            try {
+                const successful = document.execCommand('copy');
+                if (successful) {
+                    showNotification(`ID "${currentId}" скопирован`);
+                } else {
+                    showNotification('Не удалось скопировать ID', 'error');
+                }
+            } catch (err) {
+                showNotification('Не удалось скопировать ID', 'error');
+            }
+            
+            document.body.removeChild(textArea);
+        }
+        
         function saveCurrentToLocalStorage() {
             const data = {
                 id: currentId,
@@ -1165,7 +1297,6 @@
             localStorage.setItem('currentWheel', JSON.stringify(data));
         }
         
-        // Загрузка текущего набора из LocalStorage
         function loadFromLocalStorage() {
             const savedData = localStorage.getItem('currentWheel');
             if (savedData) {
@@ -1175,13 +1306,12 @@
                     values = data.values || [];
                     currentIdDisplay.textContent = currentId;
                 } catch (e) {
-                    console.error('Ошибка загрузки из localStorage:', e);
+                    console.error('Ошибка загрузки:', e);
                     generateNewId();
                 }
             }
         }
         
-        // Показать уведомление
         function showNotification(message, type = 'success') {
             notification.textContent = message;
             notification.className = 'notification';
@@ -1197,7 +1327,6 @@
             }, 3000);
         }
         
-        // Предзагрузка нескольких примеров наборов в базу данных
         function preloadExamples() {
             if (!wheelDatabase['EXAMPLE']) {
                 wheelDatabase['EXAMPLE'] = {
@@ -1209,70 +1338,17 @@
             
             if (!wheelDatabase['PRIZES']) {
                 wheelDatabase['PRIZES'] = {
-                    values: ["Футболка", "Кружка", "Наушники", "Книга", "Билет в кино", "Скидка 50%", "Флешка", "Шоколадка", "Подарок", "Сюрприз", "Бонус", "Лотерея"],
+                    values: ["Футболка", "Кружка", "Наушники", "Книга", "Билет в кино", "Скидка 50%", "Флешка", "Шоколадка"],
                     savedAt: new Date().toISOString(),
-                    count: 12
+                    count: 8
                 };
             }
             
             if (!wheelDatabase['ACTIVITY']) {
                 wheelDatabase['ACTIVITY'] = {
-                    values: ["Йога", "Бег", "Велосипед", "Плавание", "Танцы", "Поход", "Скалолазание", "Фитнес", "Аэробика", "Стретчинг", "Пилатес", "Бокс", "Теннис", "Футбол", "Баскетбол", "Волейбол"],
+                    values: ["Йога", "Бег", "Велосипед", "Плавание", "Танцы", "Поход", "Скалолазание", "Фитнес"],
                     savedAt: new Date().toISOString(),
-                    count: 16
-                };
-            }
-            
-            if (!wheelDatabase['MANY']) {
-                const manyValues = [];
-                for (let i = 1; i <= 35; i++) {
-                    manyValues.push(`Вариант ${i}`);
-                }
-                wheelDatabase['MANY'] = {
-                    values: manyValues,
-                    savedAt: new Date().toISOString(),
-                    count: 35
-                };
-            }
-            
-            // Создаем тестовый набор для проверки совпадения
-            if (!wheelDatabase['TEST']) {
-                const testValues = [];
-                for (let i = 1; i <= 10; i++) {
-                    testValues.push(`Тест ${i}`);
-                }
-                wheelDatabase['TEST'] = {
-                    values: testValues,
-                    savedAt: new Date().toISOString(),
-                    count: 10
-                };
-            }
-            
-            // Создаем набор TECH с числами от 1 до 25
-            if (!wheelDatabase['TECH']) {
-                const techValues = [];
-                for (let i = 1; i <= 25; i++) {
-                    techValues.push(`${i}`);
-                }
-                wheelDatabase['TECH'] = {
-                    values: techValues,
-                    savedAt: new Date().toISOString(),
-                    count: 25,
-                    description: "Числа от 1 до 25"
-                };
-            }
-            
-            // Создаем набор NUMBERS с числами от 1 до 50
-            if (!wheelDatabase['NUMBERS']) {
-                const numbersValues = [];
-                for (let i = 1; i <= 50; i++) {
-                    numbersValues.push(`Число ${i}`);
-                }
-                wheelDatabase['NUMBERS'] = {
-                    values: numbersValues,
-                    savedAt: new Date().toISOString(),
-                    count: 50,
-                    description: "Числа от 1 до 50"
+                    count: 8
                 };
             }
             
