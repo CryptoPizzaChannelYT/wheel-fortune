@@ -3,111 +3,223 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Колесо Фортуны с облачной Базой Данных</title>
+    <title>Wheel Fortune</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- Firebase SDK -->
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+    <!-- CryptoJS для шифрования -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
     <style>
+        :root {
+            --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --glass-bg: rgba(255, 255, 255, 0.1);
+            --glass-border: rgba(255, 255, 255, 0.2);
+            --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            --neomorphic-shadow: 20px 20px 60px rgba(0, 0, 0, 0.1), -20px -20px 60px rgba(255, 255, 255, 0.05);
+            --text-primary: rgba(255, 255, 255, 0.9);
+            --text-secondary: rgba(255, 255, 255, 0.7);
+            --text-tertiary: rgba(255, 255, 255, 0.5);
+            --accent-color: #5d5fef;
+            --accent-glow: 0 0 20px rgba(93, 95, 239, 0.5);
+            --success-color: #10b981;
+            --warning-color: #f59e0b;
+            --danger-color: #ef4444;
+            --transition-smooth: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            --transition-bounce: all 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            --blur-backdrop: blur(20px);
+        }
+        
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
         
         body {
-            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
-            color: #fff;
+            font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', system-ui, sans-serif;
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #334155 100%);
+            color: var(--text-primary);
             min-height: 100vh;
             padding: 20px;
+            overflow-x: hidden;
+            position: relative;
+        }
+        
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: 
+                radial-gradient(circle at 20% 80%, rgba(93, 95, 239, 0.15) 0%, transparent 50%),
+                radial-gradient(circle at 80% 20%, rgba(167, 139, 250, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 40% 40%, rgba(236, 72, 153, 0.08) 0%, transparent 50%);
+            z-index: -1;
+            animation: liquidMove 20s ease-in-out infinite alternate;
+        }
+        
+        @keyframes liquidMove {
+            0%, 100% {
+                transform: translate(0, 0) scale(1);
+            }
+            33% {
+                transform: translate(30px, -20px) scale(1.05);
+            }
+            66% {
+                transform: translate(-20px, 30px) scale(0.95);
+            }
         }
         
         .container {
-            max-width: 1200px;
+            max-width: 1400px;
             margin: 0 auto;
             padding: 20px;
         }
         
-        header {
+        /* Liquid Glass Header */
+        .liquid-header {
             text-align: center;
-            margin-bottom: 30px;
-            padding-bottom: 20px;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            margin-bottom: 40px;
+            padding: 30px;
+            background: var(--glass-bg);
+            backdrop-filter: var(--blur-backdrop);
+            border: 1px solid var(--glass-border);
+            border-radius: 28px;
+            box-shadow: var(--glass-shadow);
+            position: relative;
+            overflow: hidden;
         }
         
-        h1 {
-            font-size: 2.8rem;
+        .liquid-header::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: linear-gradient(
+                45deg,
+                transparent 30%,
+                rgba(255, 255, 255, 0.03) 50%,
+                transparent 70%
+            );
+            animation: shine 3s infinite linear;
+            z-index: 1;
+        }
+        
+        @keyframes shine {
+            0% { transform: translateX(-100%) translateY(-100%) rotate(45deg); }
+            100% { transform: translateX(100%) translateY(100%) rotate(45deg); }
+        }
+        
+        .liquid-header h1 {
+            font-size: 3.5rem;
+            font-weight: 800;
             margin-bottom: 10px;
-            color: #ffcc00;
-            text-shadow: 0 0 10px rgba(255, 204, 0, 0.5);
+            background: linear-gradient(135deg, #fff 30%, #a78bfa 70%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            position: relative;
+            z-index: 2;
+            letter-spacing: -0.5px;
         }
         
-        .subtitle {
+        .liquid-subtitle {
             font-size: 1.2rem;
-            color: #aaa;
+            color: var(--text-secondary);
             margin-bottom: 20px;
+            font-weight: 300;
+            letter-spacing: 0.5px;
+            position: relative;
+            z-index: 2;
         }
         
-        .firebase-status {
-            display: inline-block;
-            padding: 5px 10px;
-            background-color: rgba(0, 150, 255, 0.2);
-            border-radius: 20px;
-            font-size: 0.9rem;
-            margin-top: 10px;
+        .security-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 12px 24px;
+            background: rgba(16, 185, 129, 0.15);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(16, 185, 129, 0.3);
+            border-radius: 50px;
+            font-size: 0.95rem;
+            font-weight: 500;
+            animation: pulseGlow 2s infinite alternate;
         }
         
-        .firebase-status.connected {
-            background-color: rgba(76, 175, 80, 0.2);
+        @keyframes pulseGlow {
+            0% {
+                box-shadow: 0 0 10px rgba(16, 185, 129, 0.3);
+            }
+            100% {
+                box-shadow: 0 0 20px rgba(16, 185, 129, 0.5);
+            }
         }
         
-        .firebase-status.disconnected {
-            background-color: rgba(255, 50, 50, 0.2);
-        }
-        
-        .firebase-status.testing {
-            background-color: rgba(255, 193, 7, 0.2);
-        }
-        
+        /* Main App Container */
         .app-container {
-            display: flex;
-            flex-wrap: wrap;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
             gap: 30px;
+            margin-bottom: 40px;
         }
         
+        @media (max-width: 1024px) {
+            .app-container {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        /* Glass Panel */
+        .glass-panel {
+            background: var(--glass-bg);
+            backdrop-filter: var(--blur-backdrop);
+            border: 1px solid var(--glass-border);
+            border-radius: 24px;
+            padding: 30px;
+            box-shadow: var(--glass-shadow);
+            transition: var(--transition-smooth);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .glass-panel:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+        }
+        
+        .glass-panel::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+        }
+        
+        /* Wheel Section */
         .wheel-section {
-            flex: 1;
-            min-width: 300px;
-        }
-        
-        .controls-section {
-            flex: 1;
-            min-width: 300px;
             display: flex;
             flex-direction: column;
-            gap: 25px;
-        }
-        
-        .panel {
-            background-color: rgba(0, 0, 0, 0.3);
-            border-radius: 15px;
-            padding: 25px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            align-items: center;
+            justify-content: center;
         }
         
         .wheel-container {
             position: relative;
             width: 100%;
             max-width: 500px;
-            margin: 0 auto;
+            margin: 0 auto 30px;
         }
         
         #wheel {
             width: 100%;
             height: auto;
-            transition: transform 4s cubic-bezier(0.17, 0.67, 0.24, 0.99);
-            filter: drop-shadow(0 0 20px rgba(255, 204, 0, 0.3));
+            transition: transform 4s cubic-bezier(0.34, 1.56, 0.64, 1);
+            filter: drop-shadow(0 10px 30px rgba(0, 0, 0, 0.3));
             transform-origin: center center;
         }
         
@@ -116,492 +228,450 @@
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            width: 60px;
-            height: 60px;
-            background: #ffcc00;
+            width: 70px;
+            height: 70px;
+            background: linear-gradient(135deg, var(--accent-color), #8b5cf6);
             border-radius: 50%;
-            border: 8px solid #1a1a2e;
-            box-shadow: 0 0 15px rgba(0, 0, 0, 0.5);
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            box-shadow: 
+                inset 0 2px 10px rgba(255, 255, 255, 0.3),
+                0 10px 30px rgba(93, 95, 239, 0.4);
             z-index: 10;
             display: flex;
             align-items: center;
             justify-content: center;
-            color: #1a1a2e;
-            font-size: 24px;
+            color: white;
+            font-size: 28px;
             font-weight: bold;
+            animation: float 3s ease-in-out infinite;
+        }
+        
+        @keyframes float {
+            0%, 100% {
+                transform: translate(-50%, -50%) translateY(0);
+            }
+            50% {
+                transform: translate(-50%, -50%) translateY(-10px);
+            }
         }
         
         .pointer {
             position: absolute;
-            top: -20px;
+            top: -25px;
             left: 50%;
             transform: translateX(-50%);
-            width: 40px;
-            height: 50px;
+            width: 50px;
+            height: 60px;
             z-index: 5;
+            filter: drop-shadow(0 5px 15px rgba(239, 68, 68, 0.3));
         }
         
         .pointer svg {
-            fill: #ff3333;
-            filter: drop-shadow(0 5px 5px rgba(0, 0, 0, 0.5));
+            fill: #ef4444;
         }
         
-        .spin-button {
-            display: block;
-            margin: 30px auto;
-            padding: 18px 40px;
-            font-size: 1.3rem;
-            font-weight: bold;
-            background: linear-gradient(to right, #ffcc00, #ff9900);
-            color: #1a1a2e;
+        /* Liquid Button */
+        .liquid-button {
+            position: relative;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            padding: 20px 40px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            background: linear-gradient(135deg, var(--accent-color), #8b5cf6);
+            color: white;
             border: none;
-            border-radius: 50px;
+            border-radius: 16px;
             cursor: pointer;
-            transition: all 0.3s;
-            box-shadow: 0 5px 15px rgba(255, 204, 0, 0.4);
+            transition: var(--transition-smooth);
+            overflow: hidden;
+            box-shadow: 
+                0 10px 20px rgba(93, 95, 239, 0.3),
+                inset 0 1px 0 rgba(255, 255, 255, 0.2);
         }
         
-        .spin-button:hover {
+        .liquid-button::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: 0.5s;
+        }
+        
+        .liquid-button:hover {
             transform: translateY(-3px);
-            box-shadow: 0 8px 20px rgba(255, 204, 0, 0.6);
+            box-shadow: 
+                0 15px 30px rgba(93, 95, 239, 0.4),
+                inset 0 1px 0 rgba(255, 255, 255, 0.3);
         }
         
-        .spin-button:active {
-            transform: translateY(1px);
+        .liquid-button:hover::before {
+            left: 100%;
         }
         
-        .spin-button:disabled {
-            background: linear-gradient(to right, #666, #888);
-            color: #aaa;
+        .liquid-button:active {
+            transform: translateY(0);
+        }
+        
+        .liquid-button:disabled {
+            opacity: 0.5;
             cursor: not-allowed;
             transform: none;
             box-shadow: none;
         }
         
-        .result {
+        /* Result Display */
+        .result-display {
             text-align: center;
-            font-size: 1.8rem;
-            min-height: 60px;
-            margin-top: 20px;
-            padding: 15px;
-            background-color: rgba(0, 0, 0, 0.2);
-            border-radius: 10px;
-            border: 2px dashed rgba(255, 204, 0, 0.3);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
+            margin-top: 30px;
+            padding: 25px;
+            background: linear-gradient(135deg, rgba(93, 95, 239, 0.1), rgba(139, 92, 246, 0.05));
+            backdrop-filter: var(--blur-backdrop);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .result-display::before {
+            content: '';
+            position: absolute;
+            top: -2px;
+            left: -2px;
+            right: -2px;
+            bottom: -2px;
+            background: linear-gradient(45deg, var(--accent-color), #8b5cf6, var(--accent-color));
+            border-radius: 22px;
+            z-index: -1;
+            opacity: 0.1;
+            animation: borderFlow 3s linear infinite;
+        }
+        
+        @keyframes borderFlow {
+            0% { background-position: 0% 50%; }
+            100% { background-position: 200% 50%; }
         }
         
         .result-value {
-            color: #ffcc00;
-            font-weight: bold;
-            text-shadow: 0 0 5px rgba(255, 204, 0, 0.5);
+            font-size: 2.2rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #fff, #a78bfa);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin: 10px 0;
         }
         
-        .result-index {
-            font-size: 1rem;
-            color: #aaa;
-            margin-top: 5px;
-        }
-        
-        h2 {
-            font-size: 1.6rem;
-            margin-bottom: 20px;
-            color: #ffcc00;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        
-        h2 i {
-            font-size: 1.4rem;
-        }
-        
+        /* Input Groups */
         .input-group {
-            margin-bottom: 15px;
+            margin-bottom: 25px;
         }
         
-        .input-container {
-            display: flex;
-            margin-bottom: 15px;
+        .input-group label {
+            display: block;
+            margin-bottom: 10px;
+            color: var(--text-secondary);
+            font-weight: 500;
+            font-size: 0.95rem;
+            letter-spacing: 0.5px;
         }
         
-        input {
-            flex: 1;
-            padding: 15px;
-            border: none;
-            background-color: rgba(255, 255, 255, 0.1);
-            color: white;
+        .liquid-input {
+            width: 100%;
+            padding: 18px 20px;
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 14px;
+            color: var(--text-primary);
             font-size: 1rem;
+            transition: var(--transition-smooth);
         }
         
-        input:first-child {
-            border-radius: 8px 0 0 8px;
+        .liquid-input:focus {
+            outline: none;
+            border-color: var(--accent-color);
+            box-shadow: 0 0 0 3px rgba(93, 95, 239, 0.1);
+            background: rgba(255, 255, 255, 0.08);
         }
         
-        button {
-            padding: 15px 25px;
-            color: white;
-            border: none;
-            cursor: pointer;
-            font-weight: bold;
-            transition: background-color 0.3s;
+        .liquid-input::placeholder {
+            color: var(--text-tertiary);
         }
         
-        .btn-primary {
-            background-color: #4CAF50;
-            border-radius: 0 8px 8px 0;
-        }
-        
-        .btn-primary:hover {
-            background-color: #3d8b40;
-        }
-        
-        .values-list {
-            max-height: 250px;
+        /* Values List */
+        .values-list-container {
+            max-height: 300px;
             overflow-y: auto;
-            background-color: rgba(0, 0, 0, 0.2);
-            border-radius: 8px;
-            padding: 10px;
-            margin-top: 10px;
+            margin: 20px 0;
+            padding-right: 10px;
+        }
+        
+        .values-list-container::-webkit-scrollbar {
+            width: 6px;
+        }
+        
+        .values-list-container::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 3px;
+        }
+        
+        .values-list-container::-webkit-scrollbar-thumb {
+            background: var(--accent-color);
+            border-radius: 3px;
         }
         
         .value-item {
             display: flex;
-            justify-content: space-between;
             align-items: center;
-            padding: 12px 15px;
-            margin-bottom: 8px;
-            background-color: rgba(255, 255, 255, 0.05);
-            border-radius: 6px;
-            transition: background-color 0.2s;
+            justify-content: space-between;
+            padding: 16px 20px;
+            margin-bottom: 10px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            transition: var(--transition-smooth);
         }
         
         .value-item:hover {
-            background-color: rgba(255, 255, 255, 0.1);
+            background: rgba(255, 255, 255, 0.08);
+            border-color: rgba(255, 255, 255, 0.1);
+            transform: translateX(5px);
         }
         
         .value-text {
             flex: 1;
-            word-break: break-word;
             font-size: 0.95rem;
+            color: var(--text-primary);
         }
         
         .value-number {
-            display: inline-block;
-            width: 24px;
-            height: 24px;
-            background-color: rgba(255, 204, 0, 0.2);
-            border-radius: 50%;
-            text-align: center;
-            line-height: 24px;
-            margin-right: 10px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 28px;
+            height: 28px;
+            background: linear-gradient(135deg, var(--accent-color), #8b5cf6);
+            border-radius: 8px;
+            margin-right: 12px;
             font-size: 0.8rem;
-            font-weight: bold;
+            font-weight: 600;
+            color: white;
         }
         
         .remove-btn {
-            background-color: rgba(255, 50, 50, 0.7);
-            color: white;
-            border: none;
-            width: 30px;
-            height: 30px;
-            border-radius: 50%;
+            width: 32px;
+            height: 32px;
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid rgba(239, 68, 68, 0.2);
+            border-radius: 8px;
+            color: var(--danger-color);
             cursor: pointer;
+            transition: var(--transition-smooth);
             display: flex;
             align-items: center;
             justify-content: center;
-            margin-left: 10px;
-            transition: background-color 0.2s;
-            flex-shrink: 0;
         }
         
         .remove-btn:hover {
-            background-color: rgba(255, 50, 50, 1);
+            background: rgba(239, 68, 68, 0.2);
+            transform: scale(1.1);
         }
         
-        .empty-message {
-            text-align: center;
-            color: #888;
-            padding: 20px;
-            font-style: italic;
-        }
-        
-        .actions {
-            display: flex;
-            gap: 10px;
-            margin-top: 20px;
+        /* Action Buttons Grid */
+        .action-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 12px;
+            margin-top: 25px;
         }
         
         .action-btn {
-            flex: 1;
-            padding: 12px;
-            border: none;
-            border-radius: 8px;
+            padding: 14px;
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            color: var(--text-primary);
+            font-size: 0.9rem;
+            font-weight: 500;
             cursor: pointer;
-            font-weight: bold;
-            transition: all 0.3s;
-        }
-        
-        .btn-danger {
-            background-color: rgba(255, 50, 50, 0.7);
-            color: white;
-        }
-        
-        .btn-danger:hover {
-            background-color: rgba(255, 50, 50, 0.9);
-        }
-        
-        .btn-info {
-            background-color: rgba(0, 150, 255, 0.7);
-            color: white;
-        }
-        
-        .btn-info:hover {
-            background-color: rgba(0, 150, 255, 0.9);
-        }
-        
-        .btn-warning {
-            background-color: rgba(255, 193, 7, 0.7);
-            color: #1a1a2e;
-        }
-        
-        .btn-warning:hover {
-            background-color: rgba(255, 193, 7, 0.9);
-        }
-        
-        .id-controls {
+            transition: var(--transition-smooth);
             display: flex;
             flex-direction: column;
-            gap: 15px;
-        }
-        
-        .id-input-group {
-            display: flex;
-        }
-        
-        .id-display {
-            display: flex;
             align-items: center;
-            justify-content: space-between;
-            padding: 15px;
-            background-color: rgba(255, 255, 255, 0.05);
-            border-radius: 8px;
-            margin-top: 10px;
+            gap: 8px;
         }
         
-        .id-value {
-            font-family: monospace;
+        .action-btn i {
             font-size: 1.2rem;
-            font-weight: bold;
-            color: #ffcc00;
-            letter-spacing: 1px;
         }
         
-        .copy-btn {
-            background-color: rgba(0, 150, 255, 0.7);
-            color: white;
+        .action-btn:hover {
+            background: rgba(255, 255, 255, 0.1);
+            transform: translateY(-2px);
+        }
+        
+        .action-btn.primary {
+            background: linear-gradient(135deg, var(--accent-color), #8b5cf6);
             border: none;
-            padding: 8px 15px;
-            border-radius: 5px;
+            color: white;
+        }
+        
+        .action-btn.danger {
+            background: rgba(239, 68, 68, 0.1);
+            border-color: rgba(239, 68, 68, 0.2);
+            color: var(--danger-color);
+        }
+        
+        .action-btn.warning {
+            background: rgba(245, 158, 11, 0.1);
+            border-color: rgba(245, 158, 11, 0.2);
+            color: var(--warning-color);
+        }
+        
+        /* Security Settings */
+        .security-settings {
+            margin-top: 30px;
+            padding-top: 25px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .toggle-switch {
+            position: relative;
+            display: inline-block;
+            width: 60px;
+            height: 30px;
+        }
+        
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        
+        .toggle-slider {
+            position: absolute;
             cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 34px;
+            transition: var(--transition-smooth);
         }
         
-        .copy-btn:hover {
-            background-color: rgba(0, 150, 255, 0.9);
+        .toggle-slider:before {
+            position: absolute;
+            content: "";
+            height: 22px;
+            width: 22px;
+            left: 4px;
+            bottom: 3px;
+            background: linear-gradient(135deg, var(--accent-color), #8b5cf6);
+            border-radius: 50%;
+            transition: var(--transition-smooth);
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
         }
         
-        .copy-btn.copied {
-            background-color: #4CAF50;
+        input:checked + .toggle-slider {
+            background: rgba(93, 95, 239, 0.2);
+            border-color: var(--accent-color);
         }
         
+        input:checked + .toggle-slider:before {
+            transform: translateX(28px);
+        }
+        
+        /* Notification */
         .notification {
             position: fixed;
-            top: 20px;
-            right: 20px;
-            padding: 15px 25px;
-            background-color: #4CAF50;
-            color: white;
-            border-radius: 8px;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
-            transform: translateX(120%);
-            transition: transform 0.3s ease-out;
+            top: 30px;
+            right: 30px;
+            padding: 20px 25px;
+            background: var(--glass-bg);
+            backdrop-filter: var(--blur-backdrop);
+            border: 1px solid var(--glass-border);
+            border-radius: 16px;
+            box-shadow: var(--glass-shadow);
+            transform: translateX(150%);
+            transition: transform 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
             z-index: 1000;
+            max-width: 350px;
         }
         
         .notification.show {
             transform: translateX(0);
         }
         
+        .notification.success {
+            border-left: 4px solid var(--success-color);
+        }
+        
         .notification.error {
-            background-color: #f44336;
+            border-left: 4px solid var(--danger-color);
         }
         
         .notification.warning {
-            background-color: #ff9800;
+            border-left: 4px solid var(--warning-color);
         }
         
-        .segments-info {
-            text-align: center;
-            margin-top: 10px;
-            font-size: 0.9rem;
-            color: #aaa;
+        .notification.security {
+            border-left: 4px solid var(--accent-color);
         }
         
-        .id-suggestions {
-            margin-top: 10px;
-            font-size: 0.9rem;
-            color: #aaa;
-        }
-        
-        .id-suggestion {
-            display: inline-block;
-            background-color: rgba(255, 204, 0, 0.1);
-            padding: 4px 8px;
-            border-radius: 4px;
-            margin: 2px;
-            cursor: pointer;
-            transition: background-color 0.2s;
-        }
-        
-        .id-suggestion:hover {
-            background-color: rgba(255, 204, 0, 0.2);
-        }
-        
-        .database-stats {
-            margin-top: 15px;
-            padding: 10px;
-            background-color: rgba(0, 0, 0, 0.2);
-            border-radius: 8px;
-            font-size: 0.9rem;
-        }
-        
-        .db-action-buttons {
-            display: flex;
+        /* Segments Counter */
+        .segments-counter {
+            display: inline-flex;
+            align-items: center;
             gap: 10px;
-            margin-top: 10px;
+            padding: 10px 20px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 50px;
+            margin-top: 15px;
         }
         
-        .db-action-btn {
-            flex: 1;
-            padding: 8px;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            font-size: 0.8rem;
+        .counter-value {
+            font-weight: 600;
+            color: var(--accent-color);
         }
         
-        .btn-cloud {
-            background-color: rgba(0, 150, 255, 0.7);
-            color: white;
-        }
-        
-        .btn-cloud:hover {
-            background-color: rgba(0, 150, 255, 0.9);
-        }
-        
-        .btn-local {
-            background-color: rgba(76, 175, 80, 0.7);
-            color: white;
-        }
-        
-        .btn-local:hover {
-            background-color: rgba(76, 175, 80, 0.9);
-        }
-        
-        .btn-sync {
-            background-color: rgba(255, 193, 7, 0.7);
-            color: #1a1a2e;
-        }
-        
-        .btn-sync:hover {
-            background-color: rgba(255, 193, 7, 0.9);
-        }
-        
-        footer {
+        /* Footer */
+        .liquid-footer {
             text-align: center;
+            padding: 30px;
             margin-top: 40px;
-            padding-top: 20px;
-            border-top: 1px solid rgba(255, 255, 255, 0.1);
-            color: #888;
+            background: var(--glass-bg);
+            backdrop-filter: var(--blur-backdrop);
+            border: 1px solid var(--glass-border);
+            border-radius: 24px;
+            color: var(--text-tertiary);
             font-size: 0.9rem;
         }
         
-        @media (max-width: 768px) {
-            .app-container {
-                flex-direction: column;
-            }
-            
-            .wheel-container {
-                max-width: 350px;
-            }
-            
-            h1 {
-                font-size: 2.2rem;
-            }
-            
-            .id-input-group {
-                flex-direction: column;
-            }
-            
-            .id-input-group input {
-                border-radius: 8px 8px 0 0 !important;
-            }
-            
-            .id-input-group button {
-                border-radius: 0 0 8px 8px !important;
-            }
-            
-            .values-list {
-                max-height: 200px;
-            }
-            
-            .db-action-buttons {
-                flex-direction: column;
-            }
-        }
-        
-        /* Полоса прокрутки для списка значений */
-        .values-list::-webkit-scrollbar {
-            width: 8px;
-        }
-        
-        .values-list::-webkit-scrollbar-track {
-            background: rgba(255, 255, 255, 0.05);
-            border-radius: 4px;
-        }
-        
-        .values-list::-webkit-scrollbar-thumb {
-            background: rgba(255, 204, 0, 0.5);
-            border-radius: 4px;
-        }
-        
-        .values-list::-webkit-scrollbar-thumb:hover {
-            background: rgba(255, 204, 0, 0.7);
-        }
-        
-        .debug-info {
-            font-size: 0.8rem;
-            color: #888;
-            text-align: center;
-            margin-top: 5px;
-        }
-        
+        /* Modal Overlay */
         .modal-overlay {
             position: fixed;
             top: 0;
             left: 0;
             right: 0;
             bottom: 0;
-            background-color: rgba(0, 0, 0, 0.7);
+            background: rgba(15, 23, 42, 0.8);
+            backdrop-filter: blur(10px);
             display: flex;
             align-items: center;
             justify-content: center;
             z-index: 2000;
             opacity: 0;
             visibility: hidden;
-            transition: opacity 0.3s, visibility 0.3s;
+            transition: var(--transition-smooth);
         }
         
         .modal-overlay.show {
@@ -609,158 +679,117 @@
             visibility: visible;
         }
         
-        .modal {
-            background-color: #1a1a2e;
-            border-radius: 15px;
-            padding: 25px;
+        .modal-content {
+            background: var(--glass-bg);
+            backdrop-filter: var(--blur-backdrop);
+            border: 1px solid var(--glass-border);
+            border-radius: 24px;
+            padding: 40px;
             max-width: 500px;
             width: 90%;
             max-height: 80vh;
             overflow-y: auto;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            box-shadow: var(--glass-shadow);
+            transform: scale(0.9);
+            transition: transform 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
         }
         
-        .modal h3 {
-            color: #ffcc00;
-            margin-bottom: 15px;
-            font-size: 1.5rem;
+        .modal-overlay.show .modal-content {
+            transform: scale(1);
         }
         
-        .modal-content {
-            margin-bottom: 20px;
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .liquid-header h1 {
+                font-size: 2.5rem;
+            }
+            
+            .app-container {
+                gap: 20px;
+            }
+            
+            .glass-panel {
+                padding: 20px;
+            }
+            
+            .action-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
         }
         
-        .modal-actions {
-            display: flex;
-            gap: 10px;
-            justify-content: flex-end;
+        /* Animation Classes */
+        .fade-in {
+            animation: fadeIn 0.6s ease-out;
         }
         
-        .modal-btn {
-            padding: 10px 20px;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            font-weight: bold;
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
         
-        .modal-btn-primary {
-            background-color: #4CAF50;
-            color: white;
+        .bounce {
+            animation: bounce 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
         }
         
-        .modal-btn-secondary {
-            background-color: #666;
-            color: white;
+        @keyframes bounce {
+            0%, 100% {
+                transform: scale(1);
+            }
+            50% {
+                transform: scale(1.05);
+            }
         }
         
-        .public-wheels-list {
-            max-height: 300px;
-            overflow-y: auto;
-            margin-top: 15px;
+        /* Wave Effect */
+        .wave-container {
+            position: relative;
+            overflow: hidden;
         }
         
-        .public-wheel-item {
-            padding: 10px;
-            background-color: rgba(255, 255, 255, 0.05);
-            border-radius: 6px;
-            margin-bottom: 8px;
-            cursor: pointer;
-            transition: background-color 0.2s;
+        .wave {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 200%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+            animation: waveFlow 3s linear infinite;
         }
         
-        .public-wheel-item:hover {
-            background-color: rgba(255, 255, 255, 0.1);
-        }
-        
-        .public-wheel-id {
-            font-weight: bold;
-            color: #ffcc00;
-        }
-        
-        .public-wheel-info {
-            font-size: 0.9rem;
-            color: #aaa;
-            margin-top: 5px;
-        }
-        
-        .connection-test {
-            margin-top: 10px;
-            font-size: 0.8rem;
-            color: #aaa;
-        }
-        
-        .test-connection-btn {
-            background: none;
-            border: none;
-            color: #4CAF50;
-            cursor: pointer;
-            text-decoration: underline;
-            font-size: 0.8rem;
-            padding: 0;
-            margin-left: 5px;
-        }
-        
-        .backup-section {
-            margin-top: 20px;
-            padding-top: 15px;
-            border-top: 1px solid rgba(255, 255, 255, 0.1);
-        }
-        
-        .backup-buttons {
-            display: flex;
-            gap: 10px;
-            margin-top: 10px;
-        }
-        
-        .backup-btn {
-            flex: 1;
-            padding: 8px;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            font-size: 0.8rem;
-        }
-        
-        .btn-export {
-            background-color: rgba(156, 39, 176, 0.7);
-            color: white;
-        }
-        
-        .btn-export:hover {
-            background-color: rgba(156, 39, 176, 0.9);
-        }
-        
-        .btn-import {
-            background-color: rgba(255, 152, 0, 0.7);
-            color: white;
-        }
-        
-        .btn-import:hover {
-            background-color: rgba(255, 152, 0, 0.9);
+        @keyframes waveFlow {
+            0% {
+                transform: translateX(-100%);
+            }
+            100% {
+                transform: translateX(100%);
+            }
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <header>
-            <h1><i class="fas fa-dharmachakra"></i> Колесо Фортуны</h1>
-            <p class="subtitle">Облачная база данных для сохранения и загрузки наборов значений</p>
-            <div id="firebaseStatus" class="firebase-status testing">
-                <i class="fas fa-sync fa-spin"></i> Инициализация Firebase...
-            </div>
-            <div class="connection-test">
-                Проблемы с подключением? 
-                <button id="testConnectionBtn" class="test-connection-btn">Проверить соединение</button>
+        <!-- Liquid Glass Header -->
+        <header class="liquid-header fade-in">
+            <h1><i class="fas fa-dharmachakra"></i>Wheel Fortune</h1>
+            <p class="liquid-subtitle">The database is currently not working. To add an ID, please contact me on Telegram using the username @TikarLev</p>
+            <div class="security-badge">
+                <i class="fas fa-lock"></i>
+                <span>All data encrypted.</span>
             </div>
         </header>
         
+        <!-- Main App Container -->
         <div class="app-container">
-            <section class="wheel-section">
+            <!-- Wheel Section -->
+            <section class="wheel-section glass-panel fade-in">
                 <div class="wheel-container">
-                    <svg id="wheel" viewBox="0 0 500 500">
-                        <!-- Колесо будет генерироваться через JavaScript -->
-                    </svg>
+                    <svg id="wheel" viewBox="0 0 500 500"></svg>
                     <div class="wheel-center">
                         <i class="fas fa-star"></i>
                     </div>
@@ -771,217 +800,188 @@
                     </div>
                 </div>
                 
-                <div class="segments-info">
-                    Сегментов: <span id="segmentsCount">0</span>
+                <div class="segments-counter">
+                    <i class="fas fa-circle"></i>
+                    <span>Segments: <span class="counter-value" id="segmentsCount">0</span></span>
                 </div>
                 
-                <button id="spinButton" class="spin-button">
-                    <i class="fas fa-redo-alt"></i> Крутить колесо
+                <button id="spinButton" class="liquid-button">
+                    <i class="fas fa-redo-alt"></i>
+                    <span>Spin Wheel</span>
                 </button>
                 
-                <div class="result">
-                    <span id="resultText">Результат появится здесь</span>
-                    <div class="result-index" id="resultIndex"></div>
-                    <div class="debug-info" id="debugInfo"></div>
+                <div class="result-display">
+                    <div class="liquid-subtitle">Result</div>
+                    <div id="resultText" class="result-value">Waiting for spin...</div>
+                    <div id="resultIndex" class="liquid-subtitle"></div>
                 </div>
             </section>
             
-            <section class="controls-section">
-                <div class="panel">
-                    <h2><i class="fas fa-id-card"></i> Управление наборами</h2>
-                    
-                    <div class="id-controls">
-                        <div class="input-group">
-                            <p>Загрузите набор значений по ID:</p>
-                            <div class="id-input-group">
-                                <input type="text" id="loadIdInput" placeholder="Введите ID набора" maxlength="20">
-                                <button id="loadBtn" class="btn-primary">
-                                    <i class="fas fa-download"></i> Загрузить
-                                </button>
-                            </div>
-                            <div class="id-suggestions">
-                                Быстрая загрузка: 
-                                <span class="id-suggestion" data-id="EXAMPLE">EXAMPLE</span>
-                                <span class="id-suggestion" data-id="TECH">TECH</span>
-                                <span class="id-suggestion" data-id="TEST">TEST</span>
-                            </div>
+            <!-- Controls Section -->
+            <section class="glass-panel fade-in" style="animation-delay: 0.2s">
+                <h2 style="margin-bottom: 25px; color: var(--text-primary); font-size: 1.5rem;">
+                    <i class="fas fa-sliders-h"></i> Controls
+                </h2>
+                
+                <!-- ID Management -->
+                <div class="input-group">
+                    <label><i class="fas fa-id-card"></i> Load by ID</label>
+                    <div style="display: flex; gap: 10px;">
+                        <input type="text" id="loadIdInput" class="liquid-input" placeholder="Enter set ID">
+                        <button id="loadBtn" class="liquid-button" style="padding: 18px 25px;">
+                            <i class="fas fa-download"></i>
+                        </button>
+                    </div>
+                    <div style="margin-top: 10px; display: flex; gap: 8px; flex-wrap: wrap;">
+                        <button class="action-btn" data-id="EXAMPLE">EXAMPLE</button>
+                        <button class="action-btn" data-id="TECH">TECH</button>
+                        <button class="action-btn" data-id="TEST">TEST</button>
+                    </div>
+                </div>
+                
+                <!-- Current ID Display -->
+                <div class="input-group">
+                    <label>Current Set ID</label>
+                    <div style="display: flex; align-items: center; gap: 15px; padding: 15px; background: rgba(255, 255, 255, 0.05); border-radius: 14px;">
+                        <div style="flex: 1;">
+                            <div style="font-family: monospace; font-size: 1.2rem; color: var(--accent-color);" id="currentId">---</div>
+                            <div style="font-size: 0.85rem; color: var(--text-tertiary);">Save this ID to load later</div>
                         </div>
-                        
-                        <div class="input-group">
-                            <p>Текущий ID набора:</p>
-                            <div class="id-display">
-                                <div>
-                                    <div>ID: <span class="id-value" id="currentId">---</span></div>
-                                    <small>Сохраните этот ID для загрузки набора позже</small>
-                                </div>
-                                <button id="copyIdBtn" class="copy-btn">
-                                    <i class="far fa-copy"></i> Копировать
-                                </button>
-                            </div>
+                        <button id="copyIdBtn" class="action-btn" style="width: auto; padding: 10px 20px;">
+                            <i class="far fa-copy"></i> Copy
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Database Stats -->
+                <div class="input-group">
+                    <label><i class="fas fa-database"></i> Statistics</label>
+                    <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px;">
+                        <div style="padding: 20px; background: rgba(255, 255, 255, 0.05); border-radius: 14px; text-align: center;">
+                            <div style="font-size: 2rem; font-weight: 700; color: var(--accent-color);" id="localDbCount">0</div>
+                            <div style="font-size: 0.9rem; color: var(--text-secondary);">Local Sets</div>
                         </div>
-                        
-                        <div class="database-stats">
-                            <div><i class="fas fa-database"></i> Статус: <span id="dbStatus">Загрузка...</span></div>
-                            <div>Наборов в облаке: <span id="dbCount">0</span></div>
-                            <div>Наборов локально: <span id="localDbCount">0</span></div>
-                            <div class="db-action-buttons">
-                                <button id="publicWheelsBtn" class="db-action-btn btn-cloud">
-                                    <i class="fas fa-list"></i> Публичные наборы
-                                </button>
-                                <button id="saveToCloudBtn" class="db-action-btn btn-cloud">
-                                    <i class="fas fa-cloud-upload-alt"></i> Сохранить в облако
-                                </button>
-                                <button id="saveToLocalBtn" class="db-action-btn btn-local">
-                                    <i class="fas fa-save"></i> Сохранить локально
-                                </button>
-                            </div>
-                        </div>
-                        
-                        <div class="backup-section">
-                            <h4><i class="fas fa-file-export"></i> Резервное копирование</h4>
-                            <div class="backup-buttons">
-                                <button id="exportBtn" class="backup-btn btn-export">
-                                    <i class="fas fa-download"></i> Экспорт всех данных
-                                </button>
-                                <button id="importBtn" class="backup-btn btn-import">
-                                    <i class="fas fa-upload"></i> Импорт данных
-                                </button>
-                            </div>
-                        </div>
-                        
-                        <div class="actions">
-                            <button id="saveBtn" class="action-btn btn-info">
-                                <i class="fas fa-save"></i> Сохранить набор
-                            </button>
-                            <button id="newIdBtn" class="action-btn btn-warning">
-                                <i class="fas fa-plus"></i> Новый набор
-                            </button>
+                        <div style="padding: 20px; background: rgba(255, 255, 255, 0.05); border-radius: 14px; text-align: center;">
+                            <div style="font-size: 2rem; font-weight: 700; color: var(--accent-color);" id="valuesCount">0</div>
+                            <div style="font-size: 0.9rem; color: var(--text-secondary);">Current Values</div>
                         </div>
                     </div>
                 </div>
                 
-                <div class="panel">
-                    <h2><i class="fas fa-edit"></i> Управление значениями</h2>
-                    
-                    <div class="input-group">
-                        <p>Добавьте значение в текущий набор:</p>
-                        <div class="input-container">
-                            <input type="text" id="newValue" placeholder="Введите значение" maxlength="100">
-                            <button id="addBtn" class="btn-primary">Добавить</button>
+                <!-- Security Settings -->
+                <div class="security-settings">
+                    <label style="display: flex; align-items: center; gap: 15px; margin-bottom: 15px;">
+                        <div class="toggle-switch">
+                            <input type="checkbox" id="encryptionToggle" checked>
+                            <span class="toggle-slider"></span>
                         </div>
-                        <small>Можно добавлять неограниченное количество значений</small>
+                        <div>
+                            <div style="font-weight: 500; color: var(--text-primary);">AES-256 Encryption</div>
+                            <div style="font-size: 0.85rem; color: var(--text-tertiary);">All data is encrypted locally</div>
+                        </div>
+                    </label>
+                    <div id="encryptionStatus" style="display: flex; align-items: center; gap: 10px; padding: 12px; background: rgba(16, 185, 129, 0.1); border-radius: 12px; color: var(--success-color);">
+                        <i class="fas fa-shield-alt"></i>
+                        <span>All data is encrypted and secure</span>
                     </div>
-                    
-                    <h3><i class="fas fa-list"></i> Список значений (<span id="valuesCount">0</span>)</h3>
-                    <div class="values-list" id="valuesList">
-                        <div class="empty-message">Пока нет значений. Добавьте первое!</div>
+                </div>
+                
+                <!-- Action Buttons -->
+                <div class="action-grid">
+                    <button id="saveBtn" class="action-btn primary">
+                        <i class="fas fa-save"></i>
+                        <span>Save</span>
+                    </button>
+                    <button id="newIdBtn" class="action-btn">
+                        <i class="fas fa-plus"></i>
+                        <span>New Set</span>
+                    </button>
+                    <button id="saveToLocalBtn" class="action-btn">
+                        <i class="fas fa-download"></i>
+                        <span>Export</span>
+                    </button>
+                    <button id="clearBtn" class="action-btn danger">
+                        <i class="fas fa-trash-alt"></i>
+                        <span>Clear</span>
+                    </button>
+                </div>
+            </section>
+            
+            <!-- Values Management -->
+            <section class="glass-panel fade-in" style="animation-delay: 0.4s; grid-column: span 2;">
+                <h2 style="margin-bottom: 25px; color: var(--text-primary); font-size: 1.5rem;">
+                    <i class="fas fa-list"></i> Values Management
+                </h2>
+                
+                <div style="display: grid; grid-template-columns: 1fr auto; gap: 20px; margin-bottom: 25px;">
+                    <input type="text" id="newValue" class="liquid-input" placeholder="Enter new value (e.g., 'Win $1000')">
+                    <button id="addBtn" class="liquid-button" style="padding: 18px 30px;">
+                        <i class="fas fa-plus"></i>
+                        <span>Add</span>
+                    </button>
+                </div>
+                
+                <div class="values-list-container" id="valuesList">
+                    <div class="empty-message" style="text-align: center; padding: 40px; color: var(--text-tertiary);">
+                        <i class="fas fa-inbox" style="font-size: 3rem; margin-bottom: 15px; opacity: 0.3;"></i>
+                        <div>No values yet. Add your first value!</div>
                     </div>
-                    
-                    <div class="actions">
-                        <button id="clearBtn" class="action-btn btn-danger">
-                            <i class="fas fa-trash-alt"></i> Очистить всё
-                        </button>
-                        <button id="exampleBtn" class="action-btn btn-info">
-                            <i class="fas fa-magic"></i> Примеры
-                        </button>
-                    </div>
+                </div>
+                
+                <div class="action-grid" style="margin-top: 25px;">
+                    <button id="exampleBtn" class="action-btn">
+                        <i class="fas fa-magic"></i>
+                        <span>Examples</span>
+                    </button>
+                    <button id="importBtn" class="action-btn">
+                        <i class="fas fa-file-import"></i>
+                        <span>Import</span>
+                    </button>
+                    <button id="exportAllBtn" class="action-btn">
+                        <i class="fas fa-file-export"></i>
+                        <span>Export All</span>
+                    </button>
+                    <button id="shuffleBtn" class="action-btn">
+                        <i class="fas fa-random"></i>
+                        <span>Shuffle</span>
+                    </button>
                 </div>
             </section>
         </div>
         
-        <footer>
-            <p>Колесо Фортуны с облачной Базой Данных &copy; 2023 | Все ID сохраняются в Firebase Realtime Database</p>
-            <p><small>Если Firebase не работает, используйте локальное сохранение и экспорт/импорт данных</small></p>
+        <!-- Liquid Glass Footer -->
+        <footer class="liquid-footer fade-in" style="animation-delay: 0.6s">
+            <div style="margin-bottom: 15px;">
+                <i class="fas fa-dharmachakra" style="font-size: 2rem; color: var(--accent-color); margin-bottom: 10px;"></i>
+            </div>
+            <div>Wheel fortune with Liquid Glass effect.</div>
+            <div style="font-size: 0.8rem; margin-top: 10px; color: var(--text-tertiary);">
+                All data is encrypted.
+            </div>
         </footer>
     </div>
 
+    <!-- Notification -->
     <div id="notification" class="notification"></div>
     
-    <!-- Модальное окно для публичных наборов -->
-    <div id="publicWheelsModal" class="modal-overlay">
-        <div class="modal">
-            <h3><i class="fas fa-globe"></i> Публичные наборы</h3>
-            <div class="modal-content">
-                <p>Выберите набор для загрузки:</p>
-                <div class="public-wheels-list" id="publicWheelsList">
-                    <div class="empty-message">Загрузка публичных наборов...</div>
-                </div>
-            </div>
-            <div class="modal-actions">
-                <button id="closePublicWheelsBtn" class="modal-btn modal-btn-secondary">Закрыть</button>
-            </div>
-        </div>
-    </div>
-    
-    <!-- Модальное окно для подтверждения сохранения -->
-    <div id="saveConfirmModal" class="modal-overlay">
-        <div class="modal">
-            <h3><i class="fas fa-cloud-upload-alt"></i> Сохранить в облако</h3>
-            <div class="modal-content">
-                <p>Сохранить набор "<span id="saveModalId"></span>" в облачную базу данных?</p>
-                <p>Значений: <span id="saveModalCount"></span></p>
-                <div class="input-group">
-                    <label for="wheelDescription">Описание (необязательно):</label>
-                    <input type="text" id="wheelDescription" placeholder="Краткое описание набора" maxlength="100">
-                </div>
-                <div class="input-group">
-                    <label>
-                        <input type="checkbox" id="makePublic"> Сделать публичным (доступно всем)
-                    </label>
-                </div>
-            </div>
-            <div class="modal-actions">
-                <button id="cancelSaveBtn" class="modal-btn modal-btn-secondary">Отмена</button>
-                <button id="confirmSaveBtn" class="modal-btn modal-btn-primary">Сохранить</button>
-            </div>
-        </div>
-    </div>
-    
-    <!-- Модальное окно для импорта данных -->
+    <!-- Modal for Import -->
     <div id="importModal" class="modal-overlay">
-        <div class="modal">
-            <h3><i class="fas fa-file-import"></i> Импорт данных</h3>
-            <div class="modal-content">
-                <p>Вставьте JSON данные для импорта:</p>
-                <textarea id="importData" rows="10" placeholder='{"EXAMPLE": {"values": ["Пицца", "Кино"], "description": "Пример"}}'></textarea>
-                <p><small>Формат: JSON объект с наборами значений</small></p>
+        <div class="modal-content">
+            <h3 style="margin-bottom: 20px; color: var(--text-primary); font-size: 1.5rem;">
+                <i class="fas fa-file-import"></i> Import Data
+            </h3>
+            <div class="input-group">
+                <label>Paste JSON data:</label>
+                <textarea id="importData" class="liquid-input" rows="6" placeholder='{"EXAMPLE": {"values": ["Value 1", "Value 2"]}}'></textarea>
             </div>
-            <div class="modal-actions">
-                <button id="cancelImportBtn" class="modal-btn modal-btn-secondary">Отмена</button>
-                <button id="confirmImportBtn" class="modal-btn modal-btn-primary">Импортировать</button>
+            <div style="display: flex; gap: 15px; margin-top: 30px;">
+                <button id="cancelImportBtn" class="action-btn" style="flex: 1;">Cancel</button>
+                <button id="confirmImportBtn" class="liquid-button" style="flex: 1;">Import</button>
             </div>
         </div>
     </div>
 
     <script>
-        // Конфигурация Firebase - альтернативная на случай проблем
-        const firebaseConfigs = [
-            {
-                name: "Основной проект",
-                config: {
-                    apiKey: "AIzaSyCLaVZI6uBXG7hAPysSDUdJAfmC2CHiNx8",
-                    authDomain: "fortune-wheel-db.firebaseapp.com",
-                    databaseURL: "https://fortune-wheel-db-default-rtdb.firebaseio.com",
-                    projectId: "fortune-wheel-db",
-                    storageBucket: "fortune-wheel-db.appspot.com",
-                    messagingSenderId: "47848733591",
-                    appId: "1:47848733591:web:9d7c5118d6b9c3ac28a7f0"
-                }
-            },
-            {
-                name: "Резервный проект",
-                config: {
-                    apiKey: "AIzaSyCv24iY70DgJHLTh7GGw9nlOfJ5IxLxPNA",
-                    authDomain: "fortune-wheel-backup.firebaseapp.com",
-                    databaseURL: "https://fortune-wheel-backup-default-rtdb.firebaseio.com",
-                    projectId: "fortune-wheel-backup",
-                    storageBucket: "fortune-wheel-backup.appspot.com",
-                    messagingSenderId: "109876543210",
-                    appId: "1:109876543210:web:abcdef1234567890"
-                }
-            }
-        ];
-        
         // Начальные значения
         let values = [];
         let currentId = null;
@@ -989,13 +989,12 @@
         let isSpinning = false;
         let currentRotation = 0;
         
-        // Firebase
-        let firebaseApp;
-        let database;
-        let isFirebaseConnected = false;
-        let currentFirebaseConfigIndex = 0;
+        // Настройки шифрования
+        let isEncryptionEnabled = true;
+        const ENCRYPTION_KEY = "LiquidGlassFortuneWheel2024!@#";
+        const ENCRYPTION_SALT = "iOS26LiquidGlassDesign";
         
-        // Локальная база данных для работы оффлайн
+        // Локальная база данных
         let localDatabase = {};
         
         // Элементы DOM
@@ -1003,7 +1002,6 @@
         const spinButton = document.getElementById('spinButton');
         const resultText = document.getElementById('resultText');
         const resultIndex = document.getElementById('resultIndex');
-        const debugInfo = document.getElementById('debugInfo');
         const newValueInput = document.getElementById('newValue');
         const addButton = document.getElementById('addBtn');
         const valuesList = document.getElementById('valuesList');
@@ -1018,312 +1016,138 @@
         const valuesCount = document.getElementById('valuesCount');
         const segmentsCount = document.getElementById('segmentsCount');
         const notification = document.getElementById('notification');
-        const firebaseStatus = document.getElementById('firebaseStatus');
-        const dbStatus = document.getElementById('dbStatus');
-        const dbCount = document.getElementById('dbCount');
         const localDbCount = document.getElementById('localDbCount');
-        const saveToCloudBtn = document.getElementById('saveToCloudBtn');
         const saveToLocalBtn = document.getElementById('saveToLocalBtn');
-        const publicWheelsBtn = document.getElementById('publicWheelsBtn');
-        const testConnectionBtn = document.getElementById('testConnectionBtn');
-        const exportBtn = document.getElementById('exportBtn');
+        const encryptionToggle = document.getElementById('encryptionToggle');
+        const encryptionStatus = document.getElementById('encryptionStatus');
+        const exportAllBtn = document.getElementById('exportAllBtn');
         const importBtn = document.getElementById('importBtn');
-        
-        // Модальные окна
-        const publicWheelsModal = document.getElementById('publicWheelsModal');
-        const publicWheelsList = document.getElementById('publicWheelsList');
-        const closePublicWheelsBtn = document.getElementById('closePublicWheelsBtn');
-        const saveConfirmModal = document.getElementById('saveConfirmModal');
-        const saveModalId = document.getElementById('saveModalId');
-        const saveModalCount = document.getElementById('saveModalCount');
-        const wheelDescription = document.getElementById('wheelDescription');
-        const makePublic = document.getElementById('makePublic');
-        const cancelSaveBtn = document.getElementById('cancelSaveBtn');
-        const confirmSaveBtn = document.getElementById('confirmSaveBtn');
+        const shuffleBtn = document.getElementById('shuffleBtn');
         const importModal = document.getElementById('importModal');
         const importData = document.getElementById('importData');
         const cancelImportBtn = document.getElementById('cancelImportBtn');
         const confirmImportBtn = document.getElementById('confirmImportBtn');
         
-        // Инициализация Firebase с обработкой ошибок
-        function initializeFirebase() {
-            try {
-                const config = firebaseConfigs[currentFirebaseConfigIndex].config;
-                firebaseStatus.innerHTML = `<i class="fas fa-sync fa-spin"></i> Подключение к Firebase (${firebaseConfigs[currentFirebaseConfigIndex].name})...`;
-                
-                // Пробуем инициализировать Firebase
-                firebaseApp = firebase.initializeApp(config, `app${Date.now()}`);
-                database = firebase.database();
-                
-                // Тестируем соединение
-                testFirebaseConnection();
-                
-            } catch (error) {
-                console.error("Ошибка инициализации Firebase:", error);
-                
-                // Пробуем следующую конфигурацию
-                if (currentFirebaseConfigIndex < firebaseConfigs.length - 1) {
-                    currentFirebaseConfigIndex++;
-                    setTimeout(() => {
-                        initializeFirebase();
-                    }, 1000);
-                } else {
-                    // Все конфигурации не сработали
-                    firebaseStatus.innerHTML = '<i class="fas fa-exclamation-triangle"></i> Firebase недоступен';
-                    firebaseStatus.className = 'firebase-status disconnected';
-                    dbStatus.textContent = "Оффлайн режим";
-                    showNotification("Firebase недоступен. Работаем в локальном режиме.", "warning");
-                    
-                    // Загружаем локальную базу данных
-                    loadLocalDatabase();
-                    updateLocalDbCount();
-                }
-            }
-        }
-        
-        // Тестирование соединения с Firebase
-        function testFirebaseConnection() {
-            const testRef = database.ref('.info/connected');
-            
-            testRef.on('value', (snap) => {
-                isFirebaseConnected = snap.val() === true;
-                updateFirebaseStatus();
-                
-                if (isFirebaseConnected) {
-                    // При успешном подключении загружаем статистику
-                    loadDatabaseStats();
-                    
-                    // Загружаем предустановленные данные в облако
-                    preloadExamplesToCloud();
-                } else {
-                    // Если нет соединения, пробуем другой метод проверки
-                    checkInternetConnection();
-                }
+        // Генерация ключа шифрования
+        function generateEncryptionKey() {
+            const key = CryptoJS.PBKDF2(ENCRYPTION_KEY, ENCRYPTION_SALT, {
+                keySize: 256/32,
+                iterations: 1000
             });
-            
-            // Таймаут на случай, если соединение никогда не установится
-            setTimeout(() => {
-                if (!isFirebaseConnected) {
-                    firebaseStatus.innerHTML = '<i class="fas fa-exclamation-triangle"></i> Таймаут подключения';
-                    firebaseStatus.className = 'firebase-status disconnected';
-                    dbStatus.textContent = "Проверьте интернет";
-                    showNotification("Проверьте интернет-соединение", "warning");
-                }
-            }, 10000);
+            return key;
         }
         
-        // Проверка интернет соединения альтернативным способом
-        function checkInternetConnection() {
-            fetch('https://www.google.com/favicon.ico', { 
-                mode: 'no-cors',
-                cache: 'no-cache'
-            })
-            .then(() => {
-                // Есть интернет, но Firebase не работает
-                firebaseStatus.innerHTML = '<i class="fas fa-exclamation-triangle"></i> Firebase заблокирован';
-                firebaseStatus.className = 'firebase-status disconnected';
-                dbStatus.textContent = "CORS блокировка";
-                showNotification("Firebase заблокирован политиками CORS. Используйте локальный режим.", "warning");
-            })
-            .catch(() => {
-                // Нет интернета
-                firebaseStatus.innerHTML = '<i class="fas fa-wifi-slash"></i> Нет интернета';
-                firebaseStatus.className = 'firebase-status disconnected';
-                dbStatus.textContent = "Нет интернета";
-            });
-        }
-        
-        // Ручная проверка соединения
-        function manualTestConnection() {
-            firebaseStatus.innerHTML = '<i class="fas fa-sync fa-spin"></i> Проверка соединения...';
-            firebaseStatus.className = 'firebase-status testing';
+        // Шифрование данных
+        function encryptData(data) {
+            if (!isEncryptionEnabled) return JSON.stringify(data);
             
-            // Пробуем переключиться на другую конфигурацию
-            currentFirebaseConfigIndex = (currentFirebaseConfigIndex + 1) % firebaseConfigs.length;
-            
-            // Пробуем переинициализировать Firebase
             try {
-                if (firebaseApp) {
-                    firebaseApp.delete();
-                }
-            } catch (e) {
-                console.log("Принудительное удаление предыдущего экземпляра Firebase");
-            }
-            
-            setTimeout(() => {
-                initializeFirebase();
-            }, 500);
-        }
-        
-        // Обновление статуса Firebase
-        function updateFirebaseStatus() {
-            if (isFirebaseConnected) {
-                firebaseStatus.innerHTML = `<i class="fas fa-cloud"></i> Подключено к облаку (${firebaseConfigs[currentFirebaseConfigIndex].name})`;
-                firebaseStatus.className = 'firebase-status connected';
-                dbStatus.textContent = "Подключено";
-                
-                // Активируем кнопки облака
-                saveToCloudBtn.disabled = false;
-                publicWheelsBtn.disabled = false;
-            } else {
-                firebaseStatus.innerHTML = '<i class="fas fa-cloud-slash"></i> Оффлайн режим';
-                firebaseStatus.className = 'firebase-status disconnected';
-                dbStatus.textContent = "Оффлайн";
-                
-                // Деактивируем кнопки облака
-                saveToCloudBtn.disabled = true;
-                publicWheelsBtn.disabled = true;
-            }
-        }
-        
-        // Загрузка статистики базы данных
-        function loadDatabaseStats() {
-            if (!database || !isFirebaseConnected) return;
-            
-            database.ref('wheels').once('value')
-                .then((snapshot) => {
-                    const count = snapshot.numChildren();
-                    dbCount.textContent = count;
-                })
-                .catch((error) => {
-                    console.error("Ошибка загрузки статистики:", error);
+                const key = generateEncryptionKey();
+                const encrypted = CryptoJS.AES.encrypt(JSON.stringify(data), key.toString(), {
+                    mode: CryptoJS.mode.CBC,
+                    padding: CryptoJS.pad.Pkcs7
                 });
+                return encrypted.toString();
+            } catch (error) {
+                console.error("Encryption error:", error);
+                return JSON.stringify(data);
+            }
         }
         
-        // Загрузка локальной базы данных
-        function loadLocalDatabase() {
-            const savedDatabase = localStorage.getItem('localWheelDatabase');
-            if (savedDatabase) {
+        // Дешифрование данных
+        function decryptData(encryptedData) {
+            if (!isEncryptionEnabled) {
                 try {
-                    localDatabase = JSON.parse(savedDatabase);
-                    console.log("Локальная база данных загружена:", Object.keys(localDatabase).length, "наборов");
-                    updateLocalDbCount();
-                } catch (e) {
-                    console.error("Ошибка загрузки локальной базы данных:", e);
-                    localDatabase = {};
+                    return JSON.parse(encryptedData);
+                } catch {
+                    return encryptedData;
                 }
-            } else {
-                localDatabase = {};
             }
             
-            // Загружаем предустановленные примеры
-            preloadExamplesToLocal();
-            updateLocalDbCount();
-        }
-        
-        // Обновление счетчика локальной базы данных
-        function updateLocalDbCount() {
-            localDbCount.textContent = Object.keys(localDatabase).length;
-        }
-        
-        // Сохранение локальной базы данных
-        function saveLocalDatabase() {
-            localStorage.setItem('localWheelDatabase', JSON.stringify(localDatabase));
-            updateLocalDbCount();
-        }
-        
-        // Генерация цветовой палитры
-        function generateColors(count) {
-            const baseColors = [
-                '#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF', 
-                '#FF9F40', '#8AC926', '#1982C4', '#6A4C93', '#F15BB5',
-                '#FF595E', '#6A0572', '#00BBF9', '#00F5D4', '#FB5607',
-                '#8338EC', '#3A86FF', '#FF006E', '#FB5607', '#8338EC',
-                '#3A86FF', '#FF006E', '#06D6A0', '#118AB2', '#EF476F',
-                '#073B4C', '#7209B7', '#F72585', '#4361EE', '#4CC9F0',
-                '#B5179E', '#560BAD', '#480CA8', '#3A0CA3', '#3F37C9'
-            ];
-            
-            if (count <= baseColors.length) {
-                return baseColors.slice(0, count);
+            try {
+                const key = generateEncryptionKey();
+                const decrypted = CryptoJS.AES.decrypt(encryptedData, key.toString(), {
+                    mode: CryptoJS.mode.CBC,
+                    padding: CryptoJS.pad.Pkcs7
+                });
+                const decryptedText = decrypted.toString(CryptoJS.enc.Utf8);
+                return JSON.parse(decryptedText);
+            } catch (error) {
+                console.error("Decryption error:", error);
+                return encryptedData;
             }
-            
-            const generatedColors = [...baseColors];
-            for (let i = baseColors.length; i < count; i++) {
-                const hue = Math.floor(Math.random() * 360);
-                const saturation = 70 + Math.floor(Math.random() * 20);
-                const lightness = 50 + Math.floor(Math.random() * 20);
-                generatedColors.push(`hsl(${hue}, ${saturation}%, ${lightness}%)`);
-            }
-            
-            return generatedColors;
         }
         
         // Инициализация приложения
         document.addEventListener('DOMContentLoaded', function() {
-            // Инициализируем Firebase
-            initializeFirebase();
-            
-            // Загружаем данные из localStorage
+            // Загружаем данные
             loadFromLocalStorage();
+            loadLocalDatabase();
             
-            // Генерируем новый ID при первой загрузке
-            if (!currentId) {
-                generateNewId();
-            }
+            // Генерируем новый ID
+            if (!currentId) generateNewId();
             
+            // Рендерим интерфейс
             renderWheel();
             renderValuesList();
             
             // Обработчики событий
+            setupEventListeners();
+            
+            // Анимация загрузки
+            setTimeout(() => {
+                document.querySelectorAll('.fade-in').forEach(el => {
+                    el.style.opacity = '1';
+                    el.style.transform = 'translateY(0)';
+                });
+            }, 100);
+        });
+        
+        // Настройка обработчиков событий
+        function setupEventListeners() {
             spinButton.addEventListener('click', spinWheel);
             addButton.addEventListener('click', addValue);
-            newValueInput.addEventListener('keypress', function(e) {
-                if (e.key === 'Enter') addValue();
-            });
+            newValueInput.addEventListener('keypress', e => e.key === 'Enter' && addValue());
             clearButton.addEventListener('click', clearAllValues);
             exampleButton.addEventListener('click', loadExampleValues);
             loadButton.addEventListener('click', loadById);
-            loadIdInput.addEventListener('keypress', function(e) {
-                if (e.key === 'Enter') loadById();
-            });
+            loadIdInput.addEventListener('keypress', e => e.key === 'Enter' && loadById());
             saveButton.addEventListener('click', saveWheel);
             newIdButton.addEventListener('click', createNewWheel);
             copyIdButton.addEventListener('click', copyIdToClipboard);
+            saveToLocalBtn.addEventListener('click', exportData);
+            exportAllBtn.addEventListener('click', exportAllData);
+            importBtn.addEventListener('click', () => importModal.classList.add('show'));
+            shuffleBtn.addEventListener('click', shuffleValues);
             
-            // Обработчики для кнопок базы данных
-            saveToCloudBtn.addEventListener('click', showSaveToCloudModal);
-            saveToLocalBtn.addEventListener('click', saveWheelToLocal);
-            publicWheelsBtn.addEventListener('click', showPublicWheelsModal);
-            testConnectionBtn.addEventListener('click', manualTestConnection);
-            exportBtn.addEventListener('click', exportAllData);
-            importBtn.addEventListener('click', showImportModal);
-            
-            // Добавляем обработчики для подсказок ID
-            document.querySelectorAll('.id-suggestion').forEach(suggestion => {
-                suggestion.addEventListener('click', function() {
+            // Быстрая загрузка наборов
+            document.querySelectorAll('[data-id]').forEach(btn => {
+                btn.addEventListener('click', function() {
                     const id = this.getAttribute('data-id');
                     loadIdInput.value = id;
                     loadById();
                 });
             });
             
-            // Обработчики для модальных окон
-            closePublicWheelsBtn.addEventListener('click', () => {
-                publicWheelsModal.classList.remove('show');
+            // Настройки шифрования
+            encryptionToggle.addEventListener('change', function() {
+                isEncryptionEnabled = this.checked;
+                updateEncryptionStatus();
+                showNotification(
+                    isEncryptionEnabled ? 'Encryption enabled' : 'Encryption disabled',
+                    isEncryptionEnabled ? 'security' : 'warning'
+                );
             });
             
-            cancelSaveBtn.addEventListener('click', () => {
-                saveConfirmModal.classList.remove('show');
-            });
-            
-            confirmSaveBtn.addEventListener('click', saveWheelToCloud);
-            
-            cancelImportBtn.addEventListener('click', () => {
-                importModal.classList.remove('show');
-            });
-            
+            // Импорт данных
+            cancelImportBtn.addEventListener('click', () => importModal.classList.remove('show'));
             confirmImportBtn.addEventListener('click', importAllData);
             
-            // Закрытие модальных окон по клику вне окна
-            [publicWheelsModal, saveConfirmModal, importModal].forEach(modal => {
-                modal.addEventListener('click', (e) => {
-                    if (e.target === modal) {
-                        modal.classList.remove('show');
-                    }
-                });
+            // Закрытие модалки
+            importModal.addEventListener('click', e => {
+                if (e.target === importModal) importModal.classList.remove('show');
             });
-        });
+        }
         
         // Генерация нового ID
         function generateNewId() {
@@ -1347,31 +1171,31 @@
                 circle.setAttribute('cx', '250');
                 circle.setAttribute('cy', '250');
                 circle.setAttribute('r', '240');
-                circle.setAttribute('fill', '#333');
+                circle.setAttribute('fill', 'rgba(255, 255, 255, 0.05)');
                 wheel.appendChild(circle);
                 
                 const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
                 text.setAttribute('x', '250');
                 text.setAttribute('y', '250');
                 text.setAttribute('text-anchor', 'middle');
-                text.setAttribute('fill', 'white');
+                text.setAttribute('fill', 'rgba(255, 255, 255, 0.3)');
                 text.setAttribute('font-size', '24');
-                text.textContent = 'Добавьте значения';
+                text.textContent = 'Add values';
                 wheel.appendChild(text);
                 return;
             }
             
+            // Генерация цветов
             colors = generateColors(values.length);
-            
             const angleStep = 360 / values.length;
             const radius = 240;
             const centerX = 250;
             const centerY = 250;
             
             for (let i = 0; i < values.length; i++) {
+                // Создание сегмента
                 const startAngle = i * angleStep;
                 const endAngle = (i + 1) * angleStep;
-                
                 const startRad = (startAngle - 90) * Math.PI / 180;
                 const endRad = (endAngle - 90) * Math.PI / 180;
                 
@@ -1380,31 +1204,25 @@
                 const x2 = centerX + radius * Math.cos(endRad);
                 const y2 = centerY + radius * Math.sin(endRad);
                 
-                const largeArcFlag = endAngle - startAngle <= 180 ? 0 : 1;
-                
                 const pathData = [
                     `M ${centerX} ${centerY}`,
                     `L ${x1} ${y1}`,
-                    `A ${radius} ${radius} 0 ${largeArcFlag} 1 ${x2} ${y2}`,
+                    `A ${radius} ${radius} 0 ${endAngle - startAngle > 180 ? 1 : 0} 1 ${x2} ${y2}`,
                     'Z'
                 ].join(' ');
                 
                 const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
                 path.setAttribute('d', pathData);
                 path.setAttribute('fill', colors[i]);
-                path.setAttribute('stroke', '#1a1a2e');
+                path.setAttribute('stroke', 'rgba(255, 255, 255, 0.1)');
                 path.setAttribute('stroke-width', '1');
-                path.setAttribute('data-index', i);
                 wheel.appendChild(path);
                 
+                // Добавление текста
                 if (values.length <= 30) {
                     const textAngle = (startAngle + endAngle) / 2;
                     const textRad = (textAngle - 90) * Math.PI / 180;
-                    
-                    let textRadius = radius * 0.7;
-                    if (values.length > 20) textRadius = radius * 0.8;
-                    if (values.length > 25) textRadius = radius * 0.85;
-                    
+                    const textRadius = radius * 0.7;
                     const textX = centerX + textRadius * Math.cos(textRad);
                     const textY = centerY + textRadius * Math.sin(textRad);
                     
@@ -1413,50 +1231,54 @@
                     text.setAttribute('y', textY);
                     text.setAttribute('text-anchor', 'middle');
                     text.setAttribute('fill', getContrastColor(colors[i]));
-                    text.setAttribute('font-weight', 'bold');
-                    
-                    let fontSize = 16;
-                    if (values.length > 15) fontSize = 14;
-                    if (values.length > 20) fontSize = 12;
-                    if (values.length > 25) fontSize = 10;
-                    
-                    text.setAttribute('font-size', fontSize);
+                    text.setAttribute('font-size', Math.max(10, Math.min(16, 400 / values.length)));
                     text.setAttribute('transform', `rotate(${textAngle} ${textX} ${textY})`);
                     
-                    let maxLength = 15;
-                    if (values.length > 15) maxLength = 10;
-                    if (values.length > 20) maxLength = 8;
-                    if (values.length > 25) maxLength = 6;
-                    
-                    let textContent = values[i];
-                    if (/^\d+$/.test(values[i].trim())) {
-                        textContent = values[i].trim();
-                    } else if (textContent.length > maxLength) {
-                        textContent = textContent.substring(0, maxLength) + '...';
+                    let displayText = values[i];
+                    if (displayText.length > 15) {
+                        displayText = displayText.substring(0, 12) + '...';
                     }
-                    
-                    text.textContent = textContent;
+                    text.textContent = displayText;
                     wheel.appendChild(text);
                 }
             }
         }
         
+        // Генерация цветовой палитры
+        function generateColors(count) {
+            const palette = [
+                '#5d5fef', '#8b5cf6', '#ec4899', '#ef4444', '#f59e0b',
+                '#10b981', '#06b6d4', '#3b82f6', '#6366f1', '#8b5cf6',
+                '#d946ef', '#ec4899', '#f43f5e', '#fb7185', '#f97316',
+                '#f59e0b', '#eab308', '#84cc16', '#22c55e', '#10b981'
+            ];
+            
+            if (count <= palette.length) {
+                return palette.slice(0, count);
+            }
+            
+            const colors = [...palette];
+            for (let i = palette.length; i < count; i++) {
+                const hue = Math.floor(Math.random() * 360);
+                colors.push(`hsl(${hue}, 70%, 60%)`);
+            }
+            return colors;
+        }
+        
+        // Определение контрастного цвета
         function getContrastColor(hexColor) {
             if (hexColor.startsWith('hsl')) {
                 const match = hexColor.match(/hsl\((\d+),\s*(\d+)%,\s*(\d+)%\)/);
-                if (match) {
-                    const lightness = parseInt(match[3]);
-                    return lightness > 50 ? '#000' : '#fff';
-                }
+                if (match && parseInt(match[3]) > 50) return '#000';
+                return '#fff';
             }
             
             const hex = hexColor.replace('#', '');
             const r = parseInt(hex.substr(0, 2), 16);
             const g = parseInt(hex.substr(2, 2), 16);
             const b = parseInt(hex.substr(4, 2), 16);
-            
             const yiq = ((r * 299) + (g * 587) + (b * 114)) / 1000;
-            return (yiq >= 128) ? '#000' : '#fff';
+            return yiq >= 128 ? '#000' : '#fff';
         }
         
         // Рендер списка значений
@@ -1465,38 +1287,44 @@
             valuesCount.textContent = values.length;
             
             if (values.length === 0) {
-                valuesList.innerHTML = '<div class="empty-message">Пока нет значений. Добавьте первое!</div>';
+                valuesList.innerHTML = `
+                    <div style="text-align: center; padding: 40px; color: var(--text-tertiary);">
+                        <i class="fas fa-inbox" style="font-size: 3rem; margin-bottom: 15px; opacity: 0.3;"></i>
+                        <div>No values yet. Add your first value!</div>
+                    </div>
+                `;
                 return;
             }
             
             values.forEach((value, index) => {
                 const item = document.createElement('div');
                 item.className = 'value-item';
-                
                 item.innerHTML = `
-                    <div class="value-text"><span class="value-number">${index + 1}</span> ${value}</div>
+                    <div>
+                        <span class="value-number">${index + 1}</span>
+                        <span class="value-text">${value}</span>
+                    </div>
                     <button class="remove-btn" data-index="${index}">
                         <i class="fas fa-times"></i>
                     </button>
                 `;
-                
                 valuesList.appendChild(item);
             });
             
-            document.querySelectorAll('.remove-btn').forEach(button => {
-                button.addEventListener('click', function() {
+            // Обработчики удаления
+            document.querySelectorAll('.remove-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
                     const index = parseInt(this.getAttribute('data-index'));
                     removeValue(index);
                 });
             });
         }
         
-        // Добавление нового значения
+        // Добавление значения
         function addValue() {
             const newValue = newValueInput.value.trim();
-            
             if (!newValue) {
-                showNotification('Пожалуйста, введите значение', 'error');
+                showNotification('Please enter a value', 'error');
                 return;
             }
             
@@ -1505,8 +1333,13 @@
             renderWheel();
             renderValuesList();
             saveCurrentToLocalStorage();
+            showNotification('Value added', 'success');
             
-            showNotification(`Добавлено значение. Всего: ${values.length}`);
+            // Анимация добавления
+            const items = document.querySelectorAll('.value-item');
+            if (items.length > 0) {
+                items[items.length - 1].classList.add('bounce');
+            }
         }
         
         // Удаление значения
@@ -1516,398 +1349,248 @@
             renderWheel();
             renderValuesList();
             saveCurrentToLocalStorage();
-            showNotification(`Удалено: "${removedValue}"`);
-        }
-        
-        // Очистка всех значений
-        function clearAllValues() {
-            if (values.length === 0) return;
-            
-            if (confirm(`Вы уверены, что хотите удалить все ${values.length} значений?`)) {
-                values = [];
-                renderWheel();
-                renderValuesList();
-                resultText.textContent = 'Результат появится здесь';
-                resultIndex.textContent = '';
-                debugInfo.textContent = '';
-                saveCurrentToLocalStorage();
-                showNotification('Все значения удалены');
-            }
-        }
-        
-        // Загрузка примеров значений
-        function loadExampleValues() {
-            const exampleValues = [
-                "Пицца", "Кино", "Ресторан", "Прогулка", "Кофе", "Книга", "Игра", "Спорт",
-                "Велосипед", "Йога", "Танцы", "Рисование", "Пение", "Готовка", "Шоппинг",
-                "Музей", "Театр", "Концерт", "Выставка", "Фестиваль", "Пикник", "Пляж"
-            ];
-            
-            if (values.length > 0 && !confirm(`Заменить текущие ${values.length} значений примерами (${exampleValues.length} вариантов)?`)) {
-                return;
-            }
-            
-            values = [...exampleValues];
-            renderWheel();
-            renderValuesList();
-            saveCurrentToLocalStorage();
-            showNotification(`Загружены примеры значений (${exampleValues.length} вариантов)`);
+            showNotification(`Removed: "${removedValue}"`, 'warning');
         }
         
         // Вращение колеса
         function spinWheel() {
             if (isSpinning || values.length < 2) {
                 if (values.length < 2) {
-                    showNotification('Добавьте минимум 2 значения для вращения колеса', 'error');
+                    showNotification('Add at least 2 values to spin', 'error');
                 }
                 return;
             }
             
             isSpinning = true;
             spinButton.disabled = true;
-            resultText.textContent = "Крутим...";
+            resultText.textContent = "Spinning...";
             resultIndex.textContent = "";
-            debugInfo.textContent = "";
             
             const winningSegment = Math.floor(Math.random() * values.length);
             const segmentAngle = 360 / values.length;
-            const targetSegmentMiddleAngle = winningSegment * segmentAngle + segmentAngle / 2;
+            const targetAngle = winningSegment * segmentAngle + segmentAngle / 2;
             const fullSpins = 5;
-            const totalRotation = fullSpins * 360 + (360 - targetSegmentMiddleAngle);
+            const totalRotation = fullSpins * 360 + (360 - targetAngle);
             
             wheel.style.transform = `rotate(${totalRotation}deg)`;
             currentRotation = totalRotation % 360;
+            
+            // Анимация кнопки
+            spinButton.classList.add('bounce');
             
             setTimeout(() => {
                 const normalizedRotation = (360 - (currentRotation % 360)) % 360;
                 const segmentIndex = Math.floor(normalizedRotation / segmentAngle) % values.length;
                 
-                resultText.innerHTML = `Выпало: <span class="result-value">${values[segmentIndex]}</span>`;
-                resultIndex.textContent = `Сегмент №${segmentIndex + 1} из ${values.length}`;
-                debugInfo.textContent = `Угол: ${Math.round(normalizedRotation)}°, Индекс: ${segmentIndex}`;
+                resultText.innerHTML = values[segmentIndex];
+                resultIndex.textContent = `Segment ${segmentIndex + 1} of ${values.length}`;
                 
                 isSpinning = false;
                 spinButton.disabled = false;
+                spinButton.classList.remove('bounce');
                 
-                if (segmentIndex === winningSegment) {
-                    console.log("✓ Совпадение: расчетный индекс совпал с выбранным");
-                } else {
-                    console.warn("⚠ Несовпадение: расчетный индекс не совпал с выбранным");
-                    debugInfo.textContent += ` (ожидался: ${winningSegment})`;
-                }
+                // Анимация результата
+                resultText.classList.add('bounce');
+                setTimeout(() => resultText.classList.remove('bounce'), 500);
+                
             }, 4000);
         }
         
-        // Загрузка набора по ID
+        // Загрузка набора
         function loadById() {
-            const idToLoad = loadIdInput.value.trim().toUpperCase();
-            
-            if (!idToLoad) {
-                showNotification('Введите ID для загрузки', 'error');
+            const id = loadIdInput.value.trim().toUpperCase();
+            if (!id) {
+                showNotification('Enter set ID', 'error');
                 return;
             }
             
-            // Сначала пробуем загрузить из локальной базы (быстрее)
-            if (localDatabase[idToLoad]) {
-                loadFromLocalDatabase(idToLoad);
-                return;
-            }
-            
-            // Если не нашли локально и есть подключение к Firebase, пробуем облако
-            if (isFirebaseConnected) {
-                loadFromCloud(idToLoad);
-            } else {
-                showNotification(`Набор с ID "${idToLoad}" не найден локально`, 'error');
-            }
-        }
-        
-        // Загрузка из облачной базы данных
-        function loadFromCloud(id) {
-            if (!database || !isFirebaseConnected) {
-                showNotification('Нет подключения к облаку', 'error');
-                return;
-            }
-            
-            showNotification(`Поиск набора "${id}" в облаке...`, 'warning');
-            
-            database.ref('wheels/' + id).once('value')
-                .then((snapshot) => {
-                    if (!snapshot.exists()) {
-                        showNotification(`Набор с ID "${id}" не найден в облаке`, 'error');
-                        return;
-                    }
-                    
-                    const wheelData = snapshot.val();
-                    
-                    if (values.length > 0 && !confirm('Текущий набор будет заменен. Продолжить?')) {
-                        return;
-                    }
-                    
-                    values = [...wheelData.values];
-                    currentId = id;
-                    currentIdDisplay.textContent = currentId;
-                    
-                    renderWheel();
-                    renderValuesList();
-                    loadIdInput.value = '';
-                    
-                    saveCurrentToLocalStorage();
-                    
-                    // Сохраняем в локальную базу для оффлайн доступа
-                    localDatabase[id] = wheelData;
-                    saveLocalDatabase();
-                    
-                    const desc = wheelData.description ? ` (${wheelData.description})` : '';
-                    showNotification(`Набор "${id}" загружен из облака${desc}`);
-                    
-                    // Обновляем статистику
-                    loadDatabaseStats();
-                })
-                .catch((error) => {
-                    console.error("Ошибка загрузки из облака:", error);
-                    showNotification('Ошибка загрузки из облака', 'error');
-                });
-        }
-        
-        // Загрузка из локальной базы данных
-        function loadFromLocalDatabase(id) {
             if (!localDatabase[id]) {
-                showNotification(`Набор с ID "${id}" не найден`, 'error');
+                showNotification(`Set "${id}" not found`, 'error');
                 return;
             }
             
-            if (values.length > 0 && !confirm('Текущий набор будет заменен. Продолжить?')) {
+            if (values.length > 0 && !confirm('Current set will be replaced. Continue?')) {
                 return;
             }
             
-            values = [...localDatabase[id].values];
+            const wheelData = localDatabase[id];
+            values = Array.isArray(wheelData.values) ? [...wheelData.values] : [];
+            
+            // Расшифровка значений
+            if (isEncryptionEnabled && values.length > 0 && typeof values[0] === 'string') {
+                try {
+                    values = values.map(v => {
+                        try {
+                            const decrypted = decryptData(v);
+                            return typeof decrypted === 'string' ? decrypted : v;
+                        } catch {
+                            return v;
+                        }
+                    });
+                } catch (error) {
+                    console.error('Decryption error:', error);
+                }
+            }
+            
             currentId = id;
             currentIdDisplay.textContent = currentId;
+            loadIdInput.value = '';
             
             renderWheel();
             renderValuesList();
-            loadIdInput.value = '';
-            
             saveCurrentToLocalStorage();
             
-            const desc = localDatabase[id].description ? ` (${localDatabase[id].description})` : '';
-            showNotification(`Набор "${id}" загружен локально${desc}`);
+            showNotification(`Set "${id}" loaded`, 'success');
         }
         
-        // Сохранение текущего набора (локально)
+        // Сохранение набора
         function saveWheel() {
             if (values.length === 0) {
-                showNotification('Нельзя сохранить пустой набор', 'error');
+                showNotification('Cannot save empty set', 'error');
                 return;
             }
             
-            // Сохраняем в локальную базу данных
+            // Шифрование значений
+            let valuesToSave = values;
+            if (isEncryptionEnabled) {
+                valuesToSave = values.map(v => encryptData(v));
+            }
+            
             localDatabase[currentId] = {
-                values: [...values],
+                values: valuesToSave,
                 savedAt: new Date().toISOString(),
                 count: values.length,
-                description: `Набор из ${values.length} значений`
+                description: `Set of ${values.length} values`,
+                encrypted: isEncryptionEnabled
             };
             
             saveLocalDatabase();
             
-            showNotification(`Набор сохранен локально с ID: ${currentId} (${values.length} значений)`);
+            const securityNote = isEncryptionEnabled ? ' (encrypted)' : '';
+            showNotification(`Set saved with ID: ${currentId}${securityNote}`, 'success');
         }
         
-        // Сохранение в локальную базу данных (кнопка)
-        function saveWheelToLocal() {
-            if (values.length === 0) {
-                showNotification('Нельзя сохранить пустой набор', 'error');
+        // Загрузка примеров
+        function loadExampleValues() {
+            const examples = [
+                "Pizza", "Cinema", "Restaurant", "Walk", "Coffee", "Book", "Game", "Sports",
+                "Bicycle", "Yoga", "Dancing", "Drawing", "Singing", "Cooking", "Shopping",
+                "Museum", "Theater", "Concert", "Exhibition", "Festival", "Picnic", "Beach"
+            ];
+            
+            if (values.length > 0 && !confirm(`Replace ${values.length} values with ${examples.length} examples?`)) {
                 return;
             }
             
-            const description = prompt("Введите описание набора (необязательно):", `Набор из ${values.length} значений`) || 
-                              `Набор из ${values.length} значений`;
+            values = [...examples];
+            renderWheel();
+            renderValuesList();
+            saveCurrentToLocalStorage();
+            showNotification(`${examples.length} example values loaded`, 'success');
+        }
+        
+        // Перемешивание значений
+        function shuffleValues() {
+            if (values.length < 2) {
+                showNotification('Need at least 2 values to shuffle', 'warning');
+                return;
+            }
             
-            // Сохраняем в локальную базу данных
-            localDatabase[currentId] = {
-                values: [...values],
-                savedAt: new Date().toISOString(),
-                count: values.length,
-                description: description
+            for (let i = values.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [values[i], values[j]] = [values[j], values[i]];
+            }
+            
+            renderWheel();
+            renderValuesList();
+            saveCurrentToLocalStorage();
+            showNotification('Values shuffled', 'success');
+        }
+        
+        // Экспорт данных
+        function exportData() {
+            const exportObj = {
+                id: currentId,
+                values: values,
+                exportedAt: new Date().toISOString(),
+                count: values.length
             };
             
-            saveLocalDatabase();
+            const dataStr = JSON.stringify(exportObj, null, 2);
+            const dataUri = 'data:application/json;charset=utf-8,' + encodeURIComponent(dataStr);
             
-            showNotification(`Набор "${currentId}" сохранен в локальную базу данных`);
-        }
-        
-        // Показать модальное окно сохранения в облако
-        function showSaveToCloudModal() {
-            if (values.length === 0) {
-                showNotification('Нельзя сохранить пустой набор', 'error');
-                return;
-            }
+            const link = document.createElement('a');
+            link.setAttribute('href', dataUri);
+            link.setAttribute('download', `wheel_${currentId}_${new Date().toISOString().slice(0,10)}.json`);
+            link.click();
             
-            if (!isFirebaseConnected) {
-                showNotification('Нет подключения к интернету. Нельзя сохранить в облако.', 'error');
-                return;
-            }
-            
-            saveModalId.textContent = currentId;
-            saveModalCount.textContent = values.length;
-            wheelDescription.value = `Набор из ${values.length} значений`;
-            makePublic.checked = false;
-            
-            saveConfirmModal.classList.add('show');
-        }
-        
-        // Сохранение в облачную базу данных
-        function saveWheelToCloud() {
-            const description = wheelDescription.value.trim();
-            const isPublic = makePublic.checked;
-            
-            const wheelData = {
-                values: [...values],
-                savedAt: new Date().toISOString(),
-                count: values.length,
-                description: description || `Набор из ${values.length} значений`,
-                isPublic: isPublic,
-                author: "Пользователь"
-            };
-            
-            // Сохраняем в Firebase
-            database.ref('wheels/' + currentId).set(wheelData)
-                .then(() => {
-                    showNotification(`Набор "${currentId}" сохранен в облачную базу данных!`, 'success');
-                    saveConfirmModal.classList.remove('show');
-                    
-                    // Также сохраняем в локальную базу для оффлайн доступа
-                    localDatabase[currentId] = wheelData;
-                    saveLocalDatabase();
-                    
-                    // Обновляем статистику
-                    loadDatabaseStats();
-                })
-                .catch((error) => {
-                    console.error("Ошибка сохранения в облако:", error);
-                    showNotification('Ошибка сохранения в облако', 'error');
-                });
-        }
-        
-        // Показать модальное окно публичных наборов
-        function showPublicWheelsModal() {
-            if (!isFirebaseConnected) {
-                showNotification('Нет подключения к интернету', 'error');
-                return;
-            }
-            
-            publicWheelsList.innerHTML = '<div class="empty-message">Загрузка публичных наборов...</div>';
-            publicWheelsModal.classList.add('show');
-            
-            // Загружаем публичные наборы из Firebase
-            database.ref('wheels').orderByChild('isPublic').equalTo(true).once('value')
-                .then((snapshot) => {
-                    publicWheelsList.innerHTML = '';
-                    
-                    if (!snapshot.exists() || snapshot.numChildren() === 0) {
-                        publicWheelsList.innerHTML = '<div class="empty-message">Публичные наборы не найдены</div>';
-                        return;
-                    }
-                    
-                    snapshot.forEach((childSnapshot) => {
-                        const id = childSnapshot.key;
-                        const wheelData = childSnapshot.val();
-                        
-                        const item = document.createElement('div');
-                        item.className = 'public-wheel-item';
-                        item.innerHTML = `
-                            <div class="public-wheel-id">${id}</div>
-                            <div class="public-wheel-info">
-                                ${wheelData.description || 'Без описания'} | 
-                                Значений: ${wheelData.count || wheelData.values.length}
-                            </div>
-                        `;
-                        
-                        item.addEventListener('click', () => {
-                            loadFromCloud(id);
-                            publicWheelsModal.classList.remove('show');
-                        });
-                        
-                        publicWheelsList.appendChild(item);
-                    });
-                })
-                .catch((error) => {
-                    console.error("Ошибка загрузки публичных наборов:", error);
-                    publicWheelsList.innerHTML = '<div class="empty-message">Ошибка загрузки</div>';
-                });
+            showNotification('Data exported', 'success');
         }
         
         // Экспорт всех данных
         function exportAllData() {
-            const exportData = {
+            const exportObj = {
                 localDatabase: localDatabase,
                 currentWheel: {
                     id: currentId,
                     values: values
                 },
-                exportDate: new Date().toISOString(),
-                version: "1.0"
+                exportedAt: new Date().toISOString(),
+                version: "Liquid Glass 1.0"
             };
             
-            const dataStr = JSON.stringify(exportData, null, 2);
-            const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
+            const dataStr = JSON.stringify(exportObj, null, 2);
+            const dataUri = 'data:application/json;charset=utf-8,' + encodeURIComponent(dataStr);
             
-            const exportFileDefaultName = `fortune_wheel_backup_${new Date().toISOString().slice(0,10)}.json`;
+            const link = document.createElement('a');
+            link.setAttribute('href', dataUri);
+            link.setAttribute('download', `liquid_wheel_backup_${new Date().toISOString().slice(0,10)}.json`);
+            link.click();
             
-            const linkElement = document.createElement('a');
-            linkElement.setAttribute('href', dataUri);
-            linkElement.setAttribute('download', exportFileDefaultName);
-            linkElement.click();
-            
-            showNotification('Все данные экспортированы в файл JSON');
+            showNotification('All data exported', 'success');
         }
         
-        // Показать модальное окно импорта
-        function showImportModal() {
-            importData.value = '';
-            importModal.classList.add('show');
-        }
-        
-        // Импорт всех данных
+        // Импорт данных
         function importAllData() {
             try {
                 const importJson = importData.value.trim();
                 if (!importJson) {
-                    showNotification('Введите данные для импорта', 'error');
+                    showNotification('Enter data to import', 'error');
                     return;
                 }
                 
                 const importDataObj = JSON.parse(importJson);
                 
-                if (confirm('Импортировать данные? Текущие локальные данные будут заменены.')) {
+                if (confirm('Import data? Current local data will be replaced.')) {
                     if (importDataObj.localDatabase) {
                         localDatabase = importDataObj.localDatabase;
-                        saveLocalDatabase();
                     }
                     
                     if (importDataObj.currentWheel) {
                         values = importDataObj.currentWheel.values || [];
                         currentId = importDataObj.currentWheel.id || generateNewId();
                         currentIdDisplay.textContent = currentId;
-                        renderWheel();
-                        renderValuesList();
-                        saveCurrentToLocalStorage();
                     }
                     
+                    saveLocalDatabase();
+                    renderWheel();
+                    renderValuesList();
+                    saveCurrentToLocalStorage();
+                    
                     importModal.classList.remove('show');
-                    showNotification('Данные успешно импортированы');
-                    updateLocalDbCount();
+                    importData.value = '';
+                    
+                    showNotification('Data imported successfully', 'success');
                 }
             } catch (error) {
-                console.error("Ошибка импорта данных:", error);
-                showNotification('Ошибка импорта: неверный формат JSON', 'error');
+                console.error('Import error:', error);
+                showNotification('Invalid JSON format', 'error');
             }
         }
         
         // Создание нового набора
         function createNewWheel() {
-            if (values.length > 0 && !confirm('Создать новый набор? Текущие значения будут потеряны.')) {
+            if (values.length > 0 && !confirm('Create new set? Current values will be lost.')) {
                 return;
             }
             
@@ -1915,53 +1598,102 @@
             generateNewId();
             renderWheel();
             renderValuesList();
-            resultText.textContent = 'Результат появится здесь';
-            resultIndex.textContent = '';
-            debugInfo.textContent = '';
+            saveCurrentToLocalStorage();
             
-            showNotification('Создан новый набор');
+            showNotification('New set created', 'success');
         }
         
-        // Копирование ID в буфер обмена
+        // Копирование ID
         function copyIdToClipboard() {
             if (!currentId) return;
             
             navigator.clipboard.writeText(currentId).then(() => {
-                copyIdButton.innerHTML = '<i class="fas fa-check"></i> Скопировано';
-                copyIdButton.classList.add('copied');
+                copyIdButton.innerHTML = '<i class="fas fa-check"></i> Copied';
+                copyIdButton.classList.add('bounce');
                 
                 setTimeout(() => {
-                    copyIdButton.innerHTML = '<i class="far fa-copy"></i> Копировать';
-                    copyIdButton.classList.remove('copied');
+                    copyIdButton.innerHTML = '<i class="far fa-copy"></i> Copy';
+                    copyIdButton.classList.remove('bounce');
                 }, 2000);
                 
-                showNotification(`ID "${currentId}" скопирован в буфер обмена`);
+                showNotification(`ID "${currentId}" copied`, 'success');
             }).catch(err => {
-                showNotification('Не удалось скопировать ID', 'error');
-                console.error('Ошибка копирования: ', err);
+                console.error('Copy error:', err);
+                showNotification('Failed to copy', 'error');
             });
         }
         
-        // Сохранение текущего набора в LocalStorage
-        function saveCurrentToLocalStorage() {
-            const data = {
-                id: currentId,
-                values: values
-            };
-            localStorage.setItem('currentWheel', JSON.stringify(data));
+        // Очистка всех значений
+        function clearAllValues() {
+            if (values.length === 0) return;
+            
+            if (confirm(`Clear all ${values.length} values?`)) {
+                values = [];
+                renderWheel();
+                renderValuesList();
+                saveCurrentToLocalStorage();
+                showNotification('All values cleared', 'warning');
+            }
         }
         
-        // Загрузка текущего набора из LocalStorage
-        function loadFromLocalStorage() {
-            const savedData = localStorage.getItem('currentWheel');
-            if (savedData) {
+        // Загрузка локальной базы
+        function loadLocalDatabase() {
+            const saved = localStorage.getItem('localWheelDatabase');
+            if (saved) {
                 try {
-                    const data = JSON.parse(savedData);
+                    localDatabase = decryptData(saved);
+                    if (typeof localDatabase === 'string') {
+                        localDatabase = JSON.parse(localDatabase);
+                    }
+                    updateLocalDbCount();
+                } catch (e) {
+                    console.error('Load error:', e);
+                    localDatabase = {};
+                }
+            }
+            
+            preloadExamples();
+            updateLocalDbCount();
+        }
+        
+        // Сохранение локальной базы
+        function saveLocalDatabase() {
+            const data = isEncryptionEnabled ? encryptData(localDatabase) : JSON.stringify(localDatabase);
+            localStorage.setItem('localWheelDatabase', data);
+            updateLocalDbCount();
+        }
+        
+        // Обновление счетчика
+        function updateLocalDbCount() {
+            localDbCount.textContent = Object.keys(localDatabase).length;
+        }
+        
+        // Сохранение текущего набора
+        function saveCurrentToLocalStorage() {
+            const data = { id: currentId, values: values };
+            localStorage.setItem('currentWheel', isEncryptionEnabled ? encryptData(data) : JSON.stringify(data));
+        }
+        
+        // Загрузка текущего набора
+        function loadFromLocalStorage() {
+            const saved = localStorage.getItem('currentWheel');
+            if (saved) {
+                try {
+                    let data = saved;
+                    if (isEncryptionEnabled) {
+                        data = decryptData(saved);
+                        if (typeof data === 'string') {
+                            data = JSON.parse(data);
+                        }
+                    } else {
+                        data = JSON.parse(data);
+                    }
+                    
                     currentId = data.id || generateNewId();
                     values = data.values || [];
                     currentIdDisplay.textContent = currentId;
                 } catch (e) {
-                    console.error('Ошибка загрузки из localStorage:', e);
+                    console.error('Load error:', e);
                     generateNewId();
                 }
             }
@@ -1970,14 +1702,7 @@
         // Показать уведомление
         function showNotification(message, type = 'success') {
             notification.textContent = message;
-            notification.className = 'notification';
-            
-            if (type === 'error') {
-                notification.classList.add('error');
-            } else if (type === 'warning') {
-                notification.classList.add('warning');
-            }
-            
+            notification.className = `notification ${type}`;
             notification.classList.add('show');
             
             setTimeout(() => {
@@ -1985,92 +1710,59 @@
             }, 3000);
         }
         
-        // Предзагрузка примеров в локальную базу
-        function preloadExamplesToLocal() {
+        // Обновление статуса шифрования
+        function updateEncryptionStatus() {
+            if (isEncryptionEnabled) {
+                encryptionStatus.innerHTML = '<i class="fas fa-shield-alt"></i> All data is encrypted and secure';
+                encryptionStatus.style.background = 'rgba(16, 185, 129, 0.1)';
+                encryptionStatus.style.color = 'var(--success-color)';
+            } else {
+                encryptionStatus.innerHTML = '<i class="fas fa-exclamation-triangle"></i> Encryption is disabled';
+                encryptionStatus.style.background = 'rgba(245, 158, 11, 0.1)';
+                encryptionStatus.style.color = 'var(--warning-color)';
+            }
+        }
+        
+        // Предзагрузка примеров
+        function preloadExamples() {
             if (!localDatabase['EXAMPLE']) {
                 localDatabase['EXAMPLE'] = {
-                    values: ["Пицца", "Кино", "Ресторан", "Прогулка", "Кофе", "Книга", "Игра", "Спорт"],
+                    values: ["Pizza", "Cinema", "Restaurant", "Walk", "Coffee", "Book", "Game", "Sports"],
                     savedAt: new Date().toISOString(),
                     count: 8,
-                    description: "Примерный набор развлечений",
-                    isPublic: true
+                    description: "Example entertainment set"
                 };
             }
             
             if (!localDatabase['TECH']) {
-                const techValues = [];
-                for (let i = 1; i <= 25; i++) {
-                    techValues.push(`${i}`);
-                }
                 localDatabase['TECH'] = {
-                    values: techValues,
+                    values: Array.from({length: 25}, (_, i) => `${i + 1}`),
                     savedAt: new Date().toISOString(),
                     count: 25,
-                    description: "Числа от 1 до 25",
-                    isPublic: true
+                    description: "Numbers 1-25"
                 };
             }
             
             if (!localDatabase['TEST']) {
-                const testValues = [];
-                for (let i = 1; i <= 10; i++) {
-                    testValues.push(`Тест ${i}`);
-                }
                 localDatabase['TEST'] = {
-                    values: testValues,
+                    values: Array.from({length: 10}, (_, i) => `Test ${i + 1}`),
                     savedAt: new Date().toISOString(),
                     count: 10,
-                    description: "Тестовый набор",
-                    isPublic: true
+                    description: "Test set"
                 };
             }
             
-            saveLocalDatabase();
-        }
-        
-        // Предзагрузка примеров в облако (если подключено)
-        function preloadExamplesToCloud() {
-            if (!isFirebaseConnected || !database) return;
-            
-            // Проверяем, есть ли уже примеры в облаке
-            database.ref('wheels/EXAMPLE').once('value')
-                .then((snapshot) => {
-                    if (!snapshot.exists()) {
-                        // Загружаем примеры в облако
-                        const examples = {
-                            'EXAMPLE': {
-                                values: ["Пицца", "Кино", "Ресторан", "Прогулка", "Кофе", "Книга", "Игра", "Спорт"],
-                                savedAt: new Date().toISOString(),
-                                count: 8,
-                                description: "Примерный набор развлечений",
-                                isPublic: true,
-                                author: "Система"
-                            },
-                            'TECH': {
-                                values: Array.from({length: 25}, (_, i) => `${i + 1}`),
-                                savedAt: new Date().toISOString(),
-                                count: 25,
-                                description: "Числа от 1 до 25",
-                                isPublic: true,
-                                author: "Система"
-                            }
-                        };
-                        
-                        // Сохраняем каждый пример
-                        Object.keys(examples).forEach(id => {
-                            database.ref('wheels/' + id).set(examples[id])
-                                .then(() => {
-                                    console.log(`Пример ${id} загружен в облако`);
-                                })
-                                .catch(error => {
-                                    console.error(`Ошибка загрузки примера ${id}:`, error);
-                                });
-                        });
+            // Шифрование примеров
+            if (isEncryptionEnabled) {
+                Object.keys(localDatabase).forEach(id => {
+                    if (!localDatabase[id].encrypted) {
+                        localDatabase[id].values = localDatabase[id].values.map(v => encryptData(v));
+                        localDatabase[id].encrypted = true;
                     }
-                })
-                .catch(error => {
-                    console.error("Ошибка проверки примеров в облаке:", error);
                 });
+            }
+            
+            saveLocalDatabase();
         }
     </script>
 </body>
