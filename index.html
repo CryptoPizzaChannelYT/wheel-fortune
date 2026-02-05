@@ -66,6 +66,10 @@
             background-color: rgba(255, 50, 50, 0.2);
         }
         
+        .firebase-status.testing {
+            background-color: rgba(255, 193, 7, 0.2);
+        }
+        
         .app-container {
             display: flex;
             flex-wrap: wrap;
@@ -679,6 +683,62 @@
             color: #aaa;
             margin-top: 5px;
         }
+        
+        .connection-test {
+            margin-top: 10px;
+            font-size: 0.8rem;
+            color: #aaa;
+        }
+        
+        .test-connection-btn {
+            background: none;
+            border: none;
+            color: #4CAF50;
+            cursor: pointer;
+            text-decoration: underline;
+            font-size: 0.8rem;
+            padding: 0;
+            margin-left: 5px;
+        }
+        
+        .backup-section {
+            margin-top: 20px;
+            padding-top: 15px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .backup-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        
+        .backup-btn {
+            flex: 1;
+            padding: 8px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.8rem;
+        }
+        
+        .btn-export {
+            background-color: rgba(156, 39, 176, 0.7);
+            color: white;
+        }
+        
+        .btn-export:hover {
+            background-color: rgba(156, 39, 176, 0.9);
+        }
+        
+        .btn-import {
+            background-color: rgba(255, 152, 0, 0.7);
+            color: white;
+        }
+        
+        .btn-import:hover {
+            background-color: rgba(255, 152, 0, 0.9);
+        }
     </style>
 </head>
 <body>
@@ -686,8 +746,12 @@
         <header>
             <h1><i class="fas fa-dharmachakra"></i> Колесо Фортуны</h1>
             <p class="subtitle">Облачная база данных для сохранения и загрузки наборов значений</p>
-            <div id="firebaseStatus" class="firebase-status">
-                <i class="fas fa-cloud"></i> Загрузка Firebase...
+            <div id="firebaseStatus" class="firebase-status testing">
+                <i class="fas fa-sync fa-spin"></i> Инициализация Firebase...
+            </div>
+            <div class="connection-test">
+                Проблемы с подключением? 
+                <button id="testConnectionBtn" class="test-connection-btn">Проверить соединение</button>
             </div>
         </header>
         
@@ -759,6 +823,7 @@
                         <div class="database-stats">
                             <div><i class="fas fa-database"></i> Статус: <span id="dbStatus">Загрузка...</span></div>
                             <div>Наборов в облаке: <span id="dbCount">0</span></div>
+                            <div>Наборов локально: <span id="localDbCount">0</span></div>
                             <div class="db-action-buttons">
                                 <button id="publicWheelsBtn" class="db-action-btn btn-cloud">
                                     <i class="fas fa-list"></i> Публичные наборы
@@ -768,6 +833,18 @@
                                 </button>
                                 <button id="saveToLocalBtn" class="db-action-btn btn-local">
                                     <i class="fas fa-save"></i> Сохранить локально
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div class="backup-section">
+                            <h4><i class="fas fa-file-export"></i> Резервное копирование</h4>
+                            <div class="backup-buttons">
+                                <button id="exportBtn" class="backup-btn btn-export">
+                                    <i class="fas fa-download"></i> Экспорт всех данных
+                                </button>
+                                <button id="importBtn" class="backup-btn btn-import">
+                                    <i class="fas fa-upload"></i> Импорт данных
                                 </button>
                             </div>
                         </div>
@@ -814,6 +891,7 @@
         
         <footer>
             <p>Колесо Фортуны с облачной Базой Данных &copy; 2023 | Все ID сохраняются в Firebase Realtime Database</p>
+            <p><small>Если Firebase не работает, используйте локальное сохранение и экспорт/импорт данных</small></p>
         </footer>
     </div>
 
@@ -858,18 +936,51 @@
             </div>
         </div>
     </div>
+    
+    <!-- Модальное окно для импорта данных -->
+    <div id="importModal" class="modal-overlay">
+        <div class="modal">
+            <h3><i class="fas fa-file-import"></i> Импорт данных</h3>
+            <div class="modal-content">
+                <p>Вставьте JSON данные для импорта:</p>
+                <textarea id="importData" rows="10" placeholder='{"EXAMPLE": {"values": ["Пицца", "Кино"], "description": "Пример"}}'></textarea>
+                <p><small>Формат: JSON объект с наборами значений</small></p>
+            </div>
+            <div class="modal-actions">
+                <button id="cancelImportBtn" class="modal-btn modal-btn-secondary">Отмена</button>
+                <button id="confirmImportBtn" class="modal-btn modal-btn-primary">Импортировать</button>
+            </div>
+        </div>
+    </div>
 
     <script>
-        // Конфигурация Firebase
-        const firebaseConfig = {
-            apiKey: "AIzaSyCLaVZI6uBXG7hAPysSDUdJAfmC2CHiNx8",
-            authDomain: "fortune-wheel-db.firebaseapp.com",
-            databaseURL: "https://fortune-wheel-db-default-rtdb.firebaseio.com",
-            projectId: "fortune-wheel-db",
-            storageBucket: "fortune-wheel-db.appspot.com",
-            messagingSenderId: "47848733591",
-            appId: "1:47848733591:web:9d7c5118d6b9c3ac28a7f0"
-        };
+        // Конфигурация Firebase - альтернативная на случай проблем
+        const firebaseConfigs = [
+            {
+                name: "Основной проект",
+                config: {
+                    apiKey: "AIzaSyCLaVZI6uBXG7hAPysSDUdJAfmC2CHiNx8",
+                    authDomain: "fortune-wheel-db.firebaseapp.com",
+                    databaseURL: "https://fortune-wheel-db-default-rtdb.firebaseio.com",
+                    projectId: "fortune-wheel-db",
+                    storageBucket: "fortune-wheel-db.appspot.com",
+                    messagingSenderId: "47848733591",
+                    appId: "1:47848733591:web:9d7c5118d6b9c3ac28a7f0"
+                }
+            },
+            {
+                name: "Резервный проект",
+                config: {
+                    apiKey: "AIzaSyCv24iY70DgJHLTh7GGw9nlOfJ5IxLxPNA",
+                    authDomain: "fortune-wheel-backup.firebaseapp.com",
+                    databaseURL: "https://fortune-wheel-backup-default-rtdb.firebaseio.com",
+                    projectId: "fortune-wheel-backup",
+                    storageBucket: "fortune-wheel-backup.appspot.com",
+                    messagingSenderId: "109876543210",
+                    appId: "1:109876543210:web:abcdef1234567890"
+                }
+            }
+        ];
         
         // Начальные значения
         let values = [];
@@ -882,6 +993,7 @@
         let firebaseApp;
         let database;
         let isFirebaseConnected = false;
+        let currentFirebaseConfigIndex = 0;
         
         // Локальная база данных для работы оффлайн
         let localDatabase = {};
@@ -909,9 +1021,13 @@
         const firebaseStatus = document.getElementById('firebaseStatus');
         const dbStatus = document.getElementById('dbStatus');
         const dbCount = document.getElementById('dbCount');
+        const localDbCount = document.getElementById('localDbCount');
         const saveToCloudBtn = document.getElementById('saveToCloudBtn');
         const saveToLocalBtn = document.getElementById('saveToLocalBtn');
         const publicWheelsBtn = document.getElementById('publicWheelsBtn');
+        const testConnectionBtn = document.getElementById('testConnectionBtn');
+        const exportBtn = document.getElementById('exportBtn');
+        const importBtn = document.getElementById('importBtn');
         
         // Модальные окна
         const publicWheelsModal = document.getElementById('publicWheelsModal');
@@ -924,53 +1040,145 @@
         const makePublic = document.getElementById('makePublic');
         const cancelSaveBtn = document.getElementById('cancelSaveBtn');
         const confirmSaveBtn = document.getElementById('confirmSaveBtn');
+        const importModal = document.getElementById('importModal');
+        const importData = document.getElementById('importData');
+        const cancelImportBtn = document.getElementById('cancelImportBtn');
+        const confirmImportBtn = document.getElementById('confirmImportBtn');
         
-        // Инициализация Firebase
+        // Инициализация Firebase с обработкой ошибок
         function initializeFirebase() {
             try {
-                firebaseApp = firebase.initializeApp(firebaseConfig);
+                const config = firebaseConfigs[currentFirebaseConfigIndex].config;
+                firebaseStatus.innerHTML = `<i class="fas fa-sync fa-spin"></i> Подключение к Firebase (${firebaseConfigs[currentFirebaseConfigIndex].name})...`;
+                
+                // Пробуем инициализировать Firebase
+                firebaseApp = firebase.initializeApp(config, `app${Date.now()}`);
                 database = firebase.database();
                 
-                // Слушаем статус подключения
-                const connectedRef = database.ref(".info/connected");
-                connectedRef.on("value", function(snap) {
-                    isFirebaseConnected = snap.val() === true;
-                    updateFirebaseStatus();
-                    
-                    if (isFirebaseConnected) {
-                        // При подключении загружаем количество наборов
-                        loadDatabaseStats();
-                    }
-                });
-                
-                // Загружаем локальную базу данных
-                loadLocalDatabase();
+                // Тестируем соединение
+                testFirebaseConnection();
                 
             } catch (error) {
                 console.error("Ошибка инициализации Firebase:", error);
-                firebaseStatus.innerHTML = '<i class="fas fa-exclamation-triangle"></i> Ошибка Firebase';
-                firebaseStatus.className = 'firebase-status disconnected';
-                dbStatus.textContent = "Ошибка подключения";
-                showNotification("Ошибка подключения к облаку. Работаем в локальном режиме.", "warning");
+                
+                // Пробуем следующую конфигурацию
+                if (currentFirebaseConfigIndex < firebaseConfigs.length - 1) {
+                    currentFirebaseConfigIndex++;
+                    setTimeout(() => {
+                        initializeFirebase();
+                    }, 1000);
+                } else {
+                    // Все конфигурации не сработали
+                    firebaseStatus.innerHTML = '<i class="fas fa-exclamation-triangle"></i> Firebase недоступен';
+                    firebaseStatus.className = 'firebase-status disconnected';
+                    dbStatus.textContent = "Оффлайн режим";
+                    showNotification("Firebase недоступен. Работаем в локальном режиме.", "warning");
+                    
+                    // Загружаем локальную базу данных
+                    loadLocalDatabase();
+                    updateLocalDbCount();
+                }
             }
+        }
+        
+        // Тестирование соединения с Firebase
+        function testFirebaseConnection() {
+            const testRef = database.ref('.info/connected');
+            
+            testRef.on('value', (snap) => {
+                isFirebaseConnected = snap.val() === true;
+                updateFirebaseStatus();
+                
+                if (isFirebaseConnected) {
+                    // При успешном подключении загружаем статистику
+                    loadDatabaseStats();
+                    
+                    // Загружаем предустановленные данные в облако
+                    preloadExamplesToCloud();
+                } else {
+                    // Если нет соединения, пробуем другой метод проверки
+                    checkInternetConnection();
+                }
+            });
+            
+            // Таймаут на случай, если соединение никогда не установится
+            setTimeout(() => {
+                if (!isFirebaseConnected) {
+                    firebaseStatus.innerHTML = '<i class="fas fa-exclamation-triangle"></i> Таймаут подключения';
+                    firebaseStatus.className = 'firebase-status disconnected';
+                    dbStatus.textContent = "Проверьте интернет";
+                    showNotification("Проверьте интернет-соединение", "warning");
+                }
+            }, 10000);
+        }
+        
+        // Проверка интернет соединения альтернативным способом
+        function checkInternetConnection() {
+            fetch('https://www.google.com/favicon.ico', { 
+                mode: 'no-cors',
+                cache: 'no-cache'
+            })
+            .then(() => {
+                // Есть интернет, но Firebase не работает
+                firebaseStatus.innerHTML = '<i class="fas fa-exclamation-triangle"></i> Firebase заблокирован';
+                firebaseStatus.className = 'firebase-status disconnected';
+                dbStatus.textContent = "CORS блокировка";
+                showNotification("Firebase заблокирован политиками CORS. Используйте локальный режим.", "warning");
+            })
+            .catch(() => {
+                // Нет интернета
+                firebaseStatus.innerHTML = '<i class="fas fa-wifi-slash"></i> Нет интернета';
+                firebaseStatus.className = 'firebase-status disconnected';
+                dbStatus.textContent = "Нет интернета";
+            });
+        }
+        
+        // Ручная проверка соединения
+        function manualTestConnection() {
+            firebaseStatus.innerHTML = '<i class="fas fa-sync fa-spin"></i> Проверка соединения...';
+            firebaseStatus.className = 'firebase-status testing';
+            
+            // Пробуем переключиться на другую конфигурацию
+            currentFirebaseConfigIndex = (currentFirebaseConfigIndex + 1) % firebaseConfigs.length;
+            
+            // Пробуем переинициализировать Firebase
+            try {
+                if (firebaseApp) {
+                    firebaseApp.delete();
+                }
+            } catch (e) {
+                console.log("Принудительное удаление предыдущего экземпляра Firebase");
+            }
+            
+            setTimeout(() => {
+                initializeFirebase();
+            }, 500);
         }
         
         // Обновление статуса Firebase
         function updateFirebaseStatus() {
             if (isFirebaseConnected) {
-                firebaseStatus.innerHTML = '<i class="fas fa-cloud"></i> Подключено к облаку';
+                firebaseStatus.innerHTML = `<i class="fas fa-cloud"></i> Подключено к облаку (${firebaseConfigs[currentFirebaseConfigIndex].name})`;
                 firebaseStatus.className = 'firebase-status connected';
                 dbStatus.textContent = "Подключено";
+                
+                // Активируем кнопки облака
+                saveToCloudBtn.disabled = false;
+                publicWheelsBtn.disabled = false;
             } else {
                 firebaseStatus.innerHTML = '<i class="fas fa-cloud-slash"></i> Оффлайн режим';
                 firebaseStatus.className = 'firebase-status disconnected';
                 dbStatus.textContent = "Оффлайн";
+                
+                // Деактивируем кнопки облака
+                saveToCloudBtn.disabled = true;
+                publicWheelsBtn.disabled = true;
             }
         }
         
         // Загрузка статистики базы данных
         function loadDatabaseStats() {
-            if (!database) return;
+            if (!database || !isFirebaseConnected) return;
             
             database.ref('wheels').once('value')
                 .then((snapshot) => {
@@ -989,6 +1197,7 @@
                 try {
                     localDatabase = JSON.parse(savedDatabase);
                     console.log("Локальная база данных загружена:", Object.keys(localDatabase).length, "наборов");
+                    updateLocalDbCount();
                 } catch (e) {
                     console.error("Ошибка загрузки локальной базы данных:", e);
                     localDatabase = {};
@@ -998,12 +1207,19 @@
             }
             
             // Загружаем предустановленные примеры
-            preloadExamples();
+            preloadExamplesToLocal();
+            updateLocalDbCount();
+        }
+        
+        // Обновление счетчика локальной базы данных
+        function updateLocalDbCount() {
+            localDbCount.textContent = Object.keys(localDatabase).length;
         }
         
         // Сохранение локальной базы данных
         function saveLocalDatabase() {
             localStorage.setItem('localWheelDatabase', JSON.stringify(localDatabase));
+            updateLocalDbCount();
         }
         
         // Генерация цветовой палитры
@@ -1069,6 +1285,9 @@
             saveToCloudBtn.addEventListener('click', showSaveToCloudModal);
             saveToLocalBtn.addEventListener('click', saveWheelToLocal);
             publicWheelsBtn.addEventListener('click', showPublicWheelsModal);
+            testConnectionBtn.addEventListener('click', manualTestConnection);
+            exportBtn.addEventListener('click', exportAllData);
+            importBtn.addEventListener('click', showImportModal);
             
             // Добавляем обработчики для подсказок ID
             document.querySelectorAll('.id-suggestion').forEach(suggestion => {
@@ -1090,8 +1309,14 @@
             
             confirmSaveBtn.addEventListener('click', saveWheelToCloud);
             
+            cancelImportBtn.addEventListener('click', () => {
+                importModal.classList.remove('show');
+            });
+            
+            confirmImportBtn.addEventListener('click', importAllData);
+            
             // Закрытие модальных окон по клику вне окна
-            [publicWheelsModal, saveConfirmModal].forEach(modal => {
+            [publicWheelsModal, saveConfirmModal, importModal].forEach(modal => {
                 modal.addEventListener('click', (e) => {
                     if (e.target === modal) {
                         modal.classList.remove('show');
@@ -1382,22 +1607,33 @@
                 return;
             }
             
-            // Сначала пробуем загрузить из облака
+            // Сначала пробуем загрузить из локальной базы (быстрее)
+            if (localDatabase[idToLoad]) {
+                loadFromLocalDatabase(idToLoad);
+                return;
+            }
+            
+            // Если не нашли локально и есть подключение к Firebase, пробуем облако
             if (isFirebaseConnected) {
                 loadFromCloud(idToLoad);
             } else {
-                // Если оффлайн, пробуем загрузить из локальной базы
-                loadFromLocalDatabase(idToLoad);
+                showNotification(`Набор с ID "${idToLoad}" не найден локально`, 'error');
             }
         }
         
         // Загрузка из облачной базы данных
         function loadFromCloud(id) {
+            if (!database || !isFirebaseConnected) {
+                showNotification('Нет подключения к облаку', 'error');
+                return;
+            }
+            
+            showNotification(`Поиск набора "${id}" в облаке...`, 'warning');
+            
             database.ref('wheels/' + id).once('value')
                 .then((snapshot) => {
                     if (!snapshot.exists()) {
-                        // Если не найдено в облаке, пробуем локально
-                        loadFromLocalDatabase(id);
+                        showNotification(`Набор с ID "${id}" не найден в облаке`, 'error');
                         return;
                     }
                     
@@ -1417,6 +1653,10 @@
                     
                     saveCurrentToLocalStorage();
                     
+                    // Сохраняем в локальную базу для оффлайн доступа
+                    localDatabase[id] = wheelData;
+                    saveLocalDatabase();
+                    
                     const desc = wheelData.description ? ` (${wheelData.description})` : '';
                     showNotification(`Набор "${id}" загружен из облака${desc}`);
                     
@@ -1426,8 +1666,6 @@
                 .catch((error) => {
                     console.error("Ошибка загрузки из облака:", error);
                     showNotification('Ошибка загрузки из облака', 'error');
-                    // Пробуем загрузить из локальной базы
-                    loadFromLocalDatabase(id);
                 });
         }
         
@@ -1483,12 +1721,15 @@
                 return;
             }
             
+            const description = prompt("Введите описание набора (необязательно):", `Набор из ${values.length} значений`) || 
+                              `Набор из ${values.length} значений`;
+            
             // Сохраняем в локальную базу данных
             localDatabase[currentId] = {
                 values: [...values],
                 savedAt: new Date().toISOString(),
                 count: values.length,
-                description: prompt("Введите описание набора (необязательно):", `Набор из ${values.length} значений`) || `Набор из ${values.length} значений`
+                description: description
             };
             
             saveLocalDatabase();
@@ -1527,7 +1768,7 @@
                 count: values.length,
                 description: description || `Набор из ${values.length} значений`,
                 isPublic: isPublic,
-                author: "Анонимный пользователь"
+                author: "Пользователь"
             };
             
             // Сохраняем в Firebase
@@ -1579,8 +1820,7 @@
                             <div class="public-wheel-id">${id}</div>
                             <div class="public-wheel-info">
                                 ${wheelData.description || 'Без описания'} | 
-                                Значений: ${wheelData.count || wheelData.values.length} |
-                                Автор: ${wheelData.author || 'Аноним'}
+                                Значений: ${wheelData.count || wheelData.values.length}
                             </div>
                         `;
                         
@@ -1596,6 +1836,73 @@
                     console.error("Ошибка загрузки публичных наборов:", error);
                     publicWheelsList.innerHTML = '<div class="empty-message">Ошибка загрузки</div>';
                 });
+        }
+        
+        // Экспорт всех данных
+        function exportAllData() {
+            const exportData = {
+                localDatabase: localDatabase,
+                currentWheel: {
+                    id: currentId,
+                    values: values
+                },
+                exportDate: new Date().toISOString(),
+                version: "1.0"
+            };
+            
+            const dataStr = JSON.stringify(exportData, null, 2);
+            const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
+            
+            const exportFileDefaultName = `fortune_wheel_backup_${new Date().toISOString().slice(0,10)}.json`;
+            
+            const linkElement = document.createElement('a');
+            linkElement.setAttribute('href', dataUri);
+            linkElement.setAttribute('download', exportFileDefaultName);
+            linkElement.click();
+            
+            showNotification('Все данные экспортированы в файл JSON');
+        }
+        
+        // Показать модальное окно импорта
+        function showImportModal() {
+            importData.value = '';
+            importModal.classList.add('show');
+        }
+        
+        // Импорт всех данных
+        function importAllData() {
+            try {
+                const importJson = importData.value.trim();
+                if (!importJson) {
+                    showNotification('Введите данные для импорта', 'error');
+                    return;
+                }
+                
+                const importDataObj = JSON.parse(importJson);
+                
+                if (confirm('Импортировать данные? Текущие локальные данные будут заменены.')) {
+                    if (importDataObj.localDatabase) {
+                        localDatabase = importDataObj.localDatabase;
+                        saveLocalDatabase();
+                    }
+                    
+                    if (importDataObj.currentWheel) {
+                        values = importDataObj.currentWheel.values || [];
+                        currentId = importDataObj.currentWheel.id || generateNewId();
+                        currentIdDisplay.textContent = currentId;
+                        renderWheel();
+                        renderValuesList();
+                        saveCurrentToLocalStorage();
+                    }
+                    
+                    importModal.classList.remove('show');
+                    showNotification('Данные успешно импортированы');
+                    updateLocalDbCount();
+                }
+            } catch (error) {
+                console.error("Ошибка импорта данных:", error);
+                showNotification('Ошибка импорта: неверный формат JSON', 'error');
+            }
         }
         
         // Создание нового набора
@@ -1678,15 +1985,15 @@
             }, 3000);
         }
         
-        // Предзагрузка примеров наборов
-        function preloadExamples() {
-            // Примерные наборы для локальной базы
+        // Предзагрузка примеров в локальную базу
+        function preloadExamplesToLocal() {
             if (!localDatabase['EXAMPLE']) {
                 localDatabase['EXAMPLE'] = {
                     values: ["Пицца", "Кино", "Ресторан", "Прогулка", "Кофе", "Книга", "Игра", "Спорт"],
                     savedAt: new Date().toISOString(),
                     count: 8,
-                    description: "Примерный набор развлечений"
+                    description: "Примерный набор развлечений",
+                    isPublic: true
                 };
             }
             
@@ -1699,7 +2006,8 @@
                     values: techValues,
                     savedAt: new Date().toISOString(),
                     count: 25,
-                    description: "Числа от 1 до 25"
+                    description: "Числа от 1 до 25",
+                    isPublic: true
                 };
             }
             
@@ -1712,11 +2020,57 @@
                     values: testValues,
                     savedAt: new Date().toISOString(),
                     count: 10,
-                    description: "Тестовый набор"
+                    description: "Тестовый набор",
+                    isPublic: true
                 };
             }
             
             saveLocalDatabase();
+        }
+        
+        // Предзагрузка примеров в облако (если подключено)
+        function preloadExamplesToCloud() {
+            if (!isFirebaseConnected || !database) return;
+            
+            // Проверяем, есть ли уже примеры в облаке
+            database.ref('wheels/EXAMPLE').once('value')
+                .then((snapshot) => {
+                    if (!snapshot.exists()) {
+                        // Загружаем примеры в облако
+                        const examples = {
+                            'EXAMPLE': {
+                                values: ["Пицца", "Кино", "Ресторан", "Прогулка", "Кофе", "Книга", "Игра", "Спорт"],
+                                savedAt: new Date().toISOString(),
+                                count: 8,
+                                description: "Примерный набор развлечений",
+                                isPublic: true,
+                                author: "Система"
+                            },
+                            'TECH': {
+                                values: Array.from({length: 25}, (_, i) => `${i + 1}`),
+                                savedAt: new Date().toISOString(),
+                                count: 25,
+                                description: "Числа от 1 до 25",
+                                isPublic: true,
+                                author: "Система"
+                            }
+                        };
+                        
+                        // Сохраняем каждый пример
+                        Object.keys(examples).forEach(id => {
+                            database.ref('wheels/' + id).set(examples[id])
+                                .then(() => {
+                                    console.log(`Пример ${id} загружен в облако`);
+                                })
+                                .catch(error => {
+                                    console.error(`Ошибка загрузки примера ${id}:`, error);
+                                });
+                        });
+                    }
+                })
+                .catch(error => {
+                    console.error("Ошибка проверки примеров в облаке:", error);
+                });
         }
     </script>
 </body>
