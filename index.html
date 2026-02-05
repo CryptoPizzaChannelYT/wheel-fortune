@@ -2,98 +2,109 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="mobile-web-app-capable" content="yes">
-    <title>Колесо Фортуны</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Колесо Фортуны с облачной Базой Данных</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
     <style>
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            -webkit-tap-highlight-color: transparent;
         }
         
         body {
             background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
             color: #fff;
             min-height: 100vh;
-            padding: 10px;
-            -webkit-font-smoothing: antialiased;
-            -moz-osx-font-smoothing: grayscale;
+            padding: 20px;
         }
         
         .container {
             max-width: 1200px;
             margin: 0 auto;
-            padding: 10px;
+            padding: 20px;
         }
         
         header {
             text-align: center;
-            margin-bottom: 20px;
-            padding-bottom: 15px;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
             border-bottom: 1px solid rgba(255, 255, 255, 0.1);
         }
         
         h1 {
-            font-size: clamp(1.8rem, 5vw, 2.8rem);
-            margin-bottom: 8px;
+            font-size: 2.8rem;
+            margin-bottom: 10px;
             color: #ffcc00;
             text-shadow: 0 0 10px rgba(255, 204, 0, 0.5);
-            line-height: 1.2;
         }
         
         .subtitle {
-            font-size: clamp(0.9rem, 3vw, 1.2rem);
+            font-size: 1.2rem;
             color: #aaa;
-            margin-bottom: 15px;
-            line-height: 1.4;
+            margin-bottom: 20px;
+        }
+        
+        .firebase-status {
+            display: inline-block;
+            padding: 5px 10px;
+            background-color: rgba(0, 150, 255, 0.2);
+            border-radius: 20px;
+            font-size: 0.9rem;
+            margin-top: 10px;
+        }
+        
+        .firebase-status.connected {
+            background-color: rgba(76, 175, 80, 0.2);
+        }
+        
+        .firebase-status.disconnected {
+            background-color: rgba(255, 50, 50, 0.2);
         }
         
         .app-container {
             display: flex;
             flex-wrap: wrap;
-            gap: 20px;
+            gap: 30px;
         }
         
         .wheel-section {
             flex: 1;
-            min-width: min(100%, 300px);
+            min-width: 300px;
         }
         
         .controls-section {
             flex: 1;
-            min-width: min(100%, 300px);
+            min-width: 300px;
             display: flex;
             flex-direction: column;
-            gap: 20px;
+            gap: 25px;
         }
         
         .panel {
             background-color: rgba(0, 0, 0, 0.3);
-            border-radius: 12px;
-            padding: 20px;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
         }
         
         .wheel-container {
             position: relative;
             width: 100%;
-            max-width: min(500px, 90vw, 90vh);
+            max-width: 500px;
             margin: 0 auto;
-            aspect-ratio: 1 / 1;
         }
         
         #wheel {
             width: 100%;
-            height: 100%;
+            height: auto;
             transition: transform 4s cubic-bezier(0.17, 0.67, 0.24, 0.99);
-            filter: drop-shadow(0 0 10px rgba(255, 204, 0, 0.3));
+            filter: drop-shadow(0 0 20px rgba(255, 204, 0, 0.3));
             transform-origin: center center;
-            touch-action: none;
         }
         
         .wheel-center {
@@ -101,41 +112,41 @@
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            width: clamp(40px, 8vw, 60px);
-            height: clamp(40px, 8vw, 60px);
+            width: 60px;
+            height: 60px;
             background: #ffcc00;
             border-radius: 50%;
-            border: 6px solid #1a1a2e;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+            border: 8px solid #1a1a2e;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.5);
             z-index: 10;
             display: flex;
             align-items: center;
             justify-content: center;
             color: #1a1a2e;
-            font-size: clamp(16px, 4vw, 24px);
+            font-size: 24px;
             font-weight: bold;
         }
         
         .pointer {
             position: absolute;
-            top: -15px;
+            top: -20px;
             left: 50%;
             transform: translateX(-50%);
-            width: clamp(30px, 6vw, 40px);
-            height: clamp(35px, 7vw, 50px);
+            width: 40px;
+            height: 50px;
             z-index: 5;
         }
         
         .pointer svg {
             fill: #ff3333;
-            filter: drop-shadow(0 3px 5px rgba(0, 0, 0, 0.5));
+            filter: drop-shadow(0 5px 5px rgba(0, 0, 0, 0.5));
         }
         
         .spin-button {
             display: block;
-            margin: 20px auto;
-            padding: clamp(14px, 4vw, 18px) clamp(30px, 8vw, 40px);
-            font-size: clamp(1.1rem, 3.5vw, 1.3rem);
+            margin: 30px auto;
+            padding: 18px 40px;
+            font-size: 1.3rem;
             font-weight: bold;
             background: linear-gradient(to right, #ffcc00, #ff9900);
             color: #1a1a2e;
@@ -143,16 +154,16 @@
             border-radius: 50px;
             cursor: pointer;
             transition: all 0.3s;
-            box-shadow: 0 4px 10px rgba(255, 204, 0, 0.4);
-            min-height: 54px;
-            width: 100%;
-            max-width: 300px;
+            box-shadow: 0 5px 15px rgba(255, 204, 0, 0.4);
         }
         
-        .spin-button:hover,
+        .spin-button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(255, 204, 0, 0.6);
+        }
+        
         .spin-button:active {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 15px rgba(255, 204, 0, 0.6);
+            transform: translateY(1px);
         }
         
         .spin-button:disabled {
@@ -165,10 +176,10 @@
         
         .result {
             text-align: center;
-            font-size: clamp(1.2rem, 4vw, 1.8rem);
-            min-height: 50px;
-            margin-top: 15px;
-            padding: 12px;
+            font-size: 1.8rem;
+            min-height: 60px;
+            margin-top: 20px;
+            padding: 15px;
             background-color: rgba(0, 0, 0, 0.2);
             border-radius: 10px;
             border: 2px dashed rgba(255, 204, 0, 0.3);
@@ -176,167 +187,133 @@
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            line-height: 1.3;
         }
         
         .result-value {
             color: #ffcc00;
             font-weight: bold;
             text-shadow: 0 0 5px rgba(255, 204, 0, 0.5);
-            word-break: break-word;
-            max-width: 100%;
-            padding: 0 5px;
         }
         
         .result-index {
-            font-size: clamp(0.8rem, 2.5vw, 1rem);
+            font-size: 1rem;
             color: #aaa;
             margin-top: 5px;
         }
         
         h2 {
-            font-size: clamp(1.2rem, 3.5vw, 1.6rem);
-            margin-bottom: 15px;
+            font-size: 1.6rem;
+            margin-bottom: 20px;
             color: #ffcc00;
             display: flex;
             align-items: center;
-            gap: 8px;
-            line-height: 1.3;
+            gap: 10px;
         }
         
         h2 i {
-            font-size: clamp(1rem, 3vw, 1.4rem);
-        }
-        
-        h3 {
-            font-size: clamp(1rem, 3vw, 1.2rem);
-            margin: 15px 0 10px 0;
-            color: #ffcc00;
-            line-height: 1.3;
+            font-size: 1.4rem;
         }
         
         .input-group {
-            margin-bottom: 12px;
-        }
-        
-        .input-group p {
-            margin-bottom: 8px;
-            font-size: clamp(0.9rem, 2.5vw, 1rem);
-            line-height: 1.4;
+            margin-bottom: 15px;
         }
         
         .input-container {
             display: flex;
-            flex-direction: column;
-            gap: 10px;
             margin-bottom: 15px;
-        }
-        
-        @media (min-width: 480px) {
-            .input-container {
-                flex-direction: row;
-            }
         }
         
         input {
             flex: 1;
-            padding: clamp(12px, 3vw, 15px);
+            padding: 15px;
             border: none;
             background-color: rgba(255, 255, 255, 0.1);
             color: white;
-            font-size: clamp(0.9rem, 2.5vw, 1rem);
-            border-radius: 8px;
-            min-height: 50px;
-            -webkit-appearance: none;
+            font-size: 1rem;
         }
         
-        input:focus {
-            outline: 2px solid #ffcc00;
-            outline-offset: -2px;
+        input:first-child {
+            border-radius: 8px 0 0 8px;
         }
         
         button {
-            padding: clamp(12px, 3vw, 15px) clamp(15px, 4vw, 25px);
+            padding: 15px 25px;
             color: white;
             border: none;
             cursor: pointer;
             font-weight: bold;
-            transition: all 0.2s;
-            font-size: clamp(0.9rem, 2.5vw, 1rem);
-            min-height: 50px;
-            border-radius: 8px;
-            touch-action: manipulation;
+            transition: background-color 0.3s;
         }
         
         .btn-primary {
             background-color: #4CAF50;
+            border-radius: 0 8px 8px 0;
         }
         
-        .btn-primary:hover,
-        .btn-primary:active {
+        .btn-primary:hover {
             background-color: #3d8b40;
         }
         
         .values-list {
-            max-height: min(250px, 40vh);
+            max-height: 250px;
             overflow-y: auto;
             background-color: rgba(0, 0, 0, 0.2);
             border-radius: 8px;
-            padding: 8px;
-            margin-top: 8px;
-            -webkit-overflow-scrolling: touch;
+            padding: 10px;
+            margin-top: 10px;
         }
         
         .value-item {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 10px 12px;
-            margin-bottom: 6px;
+            padding: 12px 15px;
+            margin-bottom: 8px;
             background-color: rgba(255, 255, 255, 0.05);
             border-radius: 6px;
             transition: background-color 0.2s;
-            gap: 8px;
+        }
+        
+        .value-item:hover {
+            background-color: rgba(255, 255, 255, 0.1);
         }
         
         .value-text {
             flex: 1;
             word-break: break-word;
-            font-size: clamp(0.85rem, 2.5vw, 0.95rem);
-            line-height: 1.4;
+            font-size: 0.95rem;
         }
         
         .value-number {
             display: inline-block;
-            width: clamp(20px, 5vw, 24px);
-            height: clamp(20px, 5vw, 24px);
+            width: 24px;
+            height: 24px;
             background-color: rgba(255, 204, 0, 0.2);
             border-radius: 50%;
             text-align: center;
-            line-height: clamp(20px, 5vw, 24px);
-            margin-right: 8px;
-            font-size: clamp(0.7rem, 2vw, 0.8rem);
+            line-height: 24px;
+            margin-right: 10px;
+            font-size: 0.8rem;
             font-weight: bold;
-            flex-shrink: 0;
         }
         
         .remove-btn {
             background-color: rgba(255, 50, 50, 0.7);
             color: white;
             border: none;
-            width: clamp(28px, 6vw, 30px);
-            height: clamp(28px, 6vw, 30px);
+            width: 30px;
+            height: 30px;
             border-radius: 50%;
             cursor: pointer;
             display: flex;
             align-items: center;
             justify-content: center;
+            margin-left: 10px;
+            transition: background-color 0.2s;
             flex-shrink: 0;
-            font-size: clamp(12px, 3vw, 14px);
         }
         
-        .remove-btn:hover,
-        .remove-btn:active {
+        .remove-btn:hover {
             background-color: rgba(255, 50, 50, 1);
         }
         
@@ -345,40 +322,22 @@
             color: #888;
             padding: 20px;
             font-style: italic;
-            font-size: clamp(0.9rem, 2.5vw, 1rem);
         }
         
         .actions {
             display: flex;
-            flex-direction: column;
             gap: 10px;
-            margin-top: 15px;
-        }
-        
-        @media (min-width: 480px) {
-            .actions {
-                flex-direction: row;
-            }
+            margin-top: 20px;
         }
         
         .action-btn {
             flex: 1;
-            padding: clamp(10px, 2.5vw, 12px);
+            padding: 12px;
             border: none;
             border-radius: 8px;
             cursor: pointer;
             font-weight: bold;
             transition: all 0.3s;
-            min-height: 44px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 6px;
-            font-size: clamp(0.85rem, 2.5vw, 0.95rem);
-        }
-        
-        .action-btn i {
-            font-size: clamp(14px, 3vw, 16px);
         }
         
         .btn-danger {
@@ -386,8 +345,7 @@
             color: white;
         }
         
-        .btn-danger:hover,
-        .btn-danger:active {
+        .btn-danger:hover {
             background-color: rgba(255, 50, 50, 0.9);
         }
         
@@ -396,8 +354,7 @@
             color: white;
         }
         
-        .btn-info:hover,
-        .btn-info:active {
+        .btn-info:hover {
             background-color: rgba(0, 150, 255, 0.9);
         }
         
@@ -406,55 +363,36 @@
             color: #1a1a2e;
         }
         
-        .btn-warning:hover,
-        .btn-warning:active {
+        .btn-warning:hover {
             background-color: rgba(255, 193, 7, 0.9);
         }
         
         .id-controls {
             display: flex;
             flex-direction: column;
-            gap: 12px;
+            gap: 15px;
         }
         
         .id-input-group {
             display: flex;
-            flex-direction: column;
-            gap: 10px;
-        }
-        
-        @media (min-width: 480px) {
-            .id-input-group {
-                flex-direction: row;
-            }
         }
         
         .id-display {
             display: flex;
-            flex-direction: column;
-            gap: 10px;
-            align-items: flex-start;
-            padding: 12px;
+            align-items: center;
+            justify-content: space-between;
+            padding: 15px;
             background-color: rgba(255, 255, 255, 0.05);
             border-radius: 8px;
-            margin-top: 8px;
-        }
-        
-        @media (min-width: 480px) {
-            .id-display {
-                flex-direction: row;
-                align-items: center;
-                justify-content: space-between;
-            }
+            margin-top: 10px;
         }
         
         .id-value {
             font-family: monospace;
-            font-size: clamp(1rem, 3vw, 1.2rem);
+            font-size: 1.2rem;
             font-weight: bold;
             color: #ffcc00;
             letter-spacing: 1px;
-            word-break: break-all;
         }
         
         .copy-btn {
@@ -464,15 +402,9 @@
             padding: 8px 15px;
             border-radius: 5px;
             cursor: pointer;
-            font-size: clamp(0.85rem, 2.5vw, 0.95rem);
-            min-height: 36px;
-            display: flex;
-            align-items: center;
-            gap: 5px;
         }
         
-        .copy-btn:hover,
-        .copy-btn:active {
+        .copy-btn:hover {
             background-color: rgba(0, 150, 255, 0.9);
         }
         
@@ -483,200 +415,286 @@
         .notification {
             position: fixed;
             top: 20px;
-            right: 10px;
-            left: 10px;
-            padding: 15px 20px;
+            right: 20px;
+            padding: 15px 25px;
             background-color: #4CAF50;
             color: white;
             border-radius: 8px;
             box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
-            transform: translateY(-100px);
+            transform: translateX(120%);
             transition: transform 0.3s ease-out;
             z-index: 1000;
-            text-align: center;
-            max-width: 400px;
-            margin: 0 auto;
-        }
-        
-        @media (min-width: 480px) {
-            .notification {
-                right: 20px;
-                left: auto;
-                max-width: 300px;
-            }
         }
         
         .notification.show {
-            transform: translateY(0);
+            transform: translateX(0);
         }
         
         .notification.error {
             background-color: #f44336;
         }
         
+        .notification.warning {
+            background-color: #ff9800;
+        }
+        
         .segments-info {
             text-align: center;
-            margin-top: 8px;
-            font-size: clamp(0.8rem, 2.5vw, 0.9rem);
+            margin-top: 10px;
+            font-size: 0.9rem;
             color: #aaa;
         }
         
         .id-suggestions {
-            margin-top: 8px;
-            font-size: clamp(0.8rem, 2.5vw, 0.9rem);
+            margin-top: 10px;
+            font-size: 0.9rem;
             color: #aaa;
-            line-height: 1.4;
         }
         
         .id-suggestion {
             display: inline-block;
             background-color: rgba(255, 204, 0, 0.1);
-            padding: 3px 6px;
+            padding: 4px 8px;
             border-radius: 4px;
             margin: 2px;
             cursor: pointer;
             transition: background-color 0.2s;
-            font-size: clamp(0.75rem, 2vw, 0.85rem);
         }
         
-        .id-suggestion:hover,
-        .id-suggestion:active {
+        .id-suggestion:hover {
             background-color: rgba(255, 204, 0, 0.2);
+        }
+        
+        .database-stats {
+            margin-top: 15px;
+            padding: 10px;
+            background-color: rgba(0, 0, 0, 0.2);
+            border-radius: 8px;
+            font-size: 0.9rem;
+        }
+        
+        .db-action-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        
+        .db-action-btn {
+            flex: 1;
+            padding: 8px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.8rem;
+        }
+        
+        .btn-cloud {
+            background-color: rgba(0, 150, 255, 0.7);
+            color: white;
+        }
+        
+        .btn-cloud:hover {
+            background-color: rgba(0, 150, 255, 0.9);
+        }
+        
+        .btn-local {
+            background-color: rgba(76, 175, 80, 0.7);
+            color: white;
+        }
+        
+        .btn-local:hover {
+            background-color: rgba(76, 175, 80, 0.9);
+        }
+        
+        .btn-sync {
+            background-color: rgba(255, 193, 7, 0.7);
+            color: #1a1a2e;
+        }
+        
+        .btn-sync:hover {
+            background-color: rgba(255, 193, 7, 0.9);
         }
         
         footer {
             text-align: center;
-            margin-top: 30px;
-            padding-top: 15px;
+            margin-top: 40px;
+            padding-top: 20px;
             border-top: 1px solid rgba(255, 255, 255, 0.1);
             color: #888;
-            font-size: clamp(0.8rem, 2.5vw, 0.9rem);
-            line-height: 1.4;
+            font-size: 0.9rem;
         }
         
-        .debug-info {
-            font-size: clamp(0.7rem, 2vw, 0.8rem);
-            color: #888;
-            text-align: center;
-            margin-top: 5px;
-        }
-        
-        /* Мобильная оптимизация */
-        @media (max-width: 479px) {
-            .container {
-                padding: 5px;
-            }
-            
-            .panel {
-                padding: 15px;
-            }
-            
-            .spin-button {
-                margin: 15px auto;
-                min-height: 48px;
-            }
-            
-            .value-item {
-                padding: 8px 10px;
-            }
-        }
-        
-        @media (max-width: 359px) {
-            h1 {
-                font-size: 1.6rem;
-            }
-            
-            .spin-button {
-                font-size: 1rem;
-                padding: 12px 20px;
-            }
-            
-            .panel {
-                padding: 12px;
-            }
-        }
-        
-        /* Пейзажная ориентация */
-        @media (max-height: 500px) and (orientation: landscape) {
-            body {
-                padding: 5px;
-            }
-            
+        @media (max-width: 768px) {
             .app-container {
-                flex-direction: row;
-                gap: 10px;
+                flex-direction: column;
             }
             
             .wheel-container {
-                max-width: min(40vh, 250px);
+                max-width: 350px;
+            }
+            
+            h1 {
+                font-size: 2.2rem;
+            }
+            
+            .id-input-group {
+                flex-direction: column;
+            }
+            
+            .id-input-group input {
+                border-radius: 8px 8px 0 0 !important;
+            }
+            
+            .id-input-group button {
+                border-radius: 0 0 8px 8px !important;
             }
             
             .values-list {
-                max-height: 150px;
+                max-height: 200px;
             }
             
-            .spin-button {
-                margin: 10px auto;
-                padding: 10px 20px;
-                font-size: 1rem;
+            .db-action-buttons {
+                flex-direction: column;
             }
         }
         
         /* Полоса прокрутки для списка значений */
         .values-list::-webkit-scrollbar {
-            width: 6px;
+            width: 8px;
         }
         
         .values-list::-webkit-scrollbar-track {
             background: rgba(255, 255, 255, 0.05);
-            border-radius: 3px;
+            border-radius: 4px;
         }
         
         .values-list::-webkit-scrollbar-thumb {
             background: rgba(255, 204, 0, 0.5);
-            border-radius: 3px;
+            border-radius: 4px;
         }
         
         .values-list::-webkit-scrollbar-thumb:hover {
             background: rgba(255, 204, 0, 0.7);
         }
         
-        /* Улучшения для iOS */
-        @supports (-webkit-touch-callout: none) {
-            .spin-button,
-            button,
-            input,
-            .action-btn {
-                cursor: pointer;
-            }
-            
-            input {
-                font-size: 16px; /* Предотвращает автоматическое увеличение на iOS */
-            }
+        .debug-info {
+            font-size: 0.8rem;
+            color: #888;
+            text-align: center;
+            margin-top: 5px;
         }
         
-        /* Предотвращение выделения на тапах */
-        .no-select {
-            -webkit-touch-callout: none;
-            -webkit-user-select: none;
-            -khtml-user-select: none;
-            -moz-user-select: none;
-            -ms-user-select: none;
-            user-select: none;
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0, 0, 0, 0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s, visibility 0.3s;
+        }
+        
+        .modal-overlay.show {
+            opacity: 1;
+            visibility: visible;
+        }
+        
+        .modal {
+            background-color: #1a1a2e;
+            border-radius: 15px;
+            padding: 25px;
+            max-width: 500px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+        }
+        
+        .modal h3 {
+            color: #ffcc00;
+            margin-bottom: 15px;
+            font-size: 1.5rem;
+        }
+        
+        .modal-content {
+            margin-bottom: 20px;
+        }
+        
+        .modal-actions {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+        }
+        
+        .modal-btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        
+        .modal-btn-primary {
+            background-color: #4CAF50;
+            color: white;
+        }
+        
+        .modal-btn-secondary {
+            background-color: #666;
+            color: white;
+        }
+        
+        .public-wheels-list {
+            max-height: 300px;
+            overflow-y: auto;
+            margin-top: 15px;
+        }
+        
+        .public-wheel-item {
+            padding: 10px;
+            background-color: rgba(255, 255, 255, 0.05);
+            border-radius: 6px;
+            margin-bottom: 8px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        
+        .public-wheel-item:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+        
+        .public-wheel-id {
+            font-weight: bold;
+            color: #ffcc00;
+        }
+        
+        .public-wheel-info {
+            font-size: 0.9rem;
+            color: #aaa;
+            margin-top: 5px;
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <header class="no-select">
+        <header>
             <h1><i class="fas fa-dharmachakra"></i> Колесо Фортуны</h1>
-            <p class="subtitle">Сайт создан гражданином Российской Федерации</p>
+            <p class="subtitle">Облачная база данных для сохранения и загрузки наборов значений</p>
+            <div id="firebaseStatus" class="firebase-status">
+                <i class="fas fa-cloud"></i> Загрузка Firebase...
+            </div>
         </header>
         
         <div class="app-container">
             <section class="wheel-section">
                 <div class="wheel-container">
-                    <svg id="wheel" viewBox="0 0 500 500" class="no-select">
+                    <svg id="wheel" viewBox="0 0 500 500">
                         <!-- Колесо будет генерироваться через JavaScript -->
                     </svg>
                     <div class="wheel-center">
@@ -689,12 +707,12 @@
                     </div>
                 </div>
                 
-                <div class="segments-info no-select">
+                <div class="segments-info">
                     Сегментов: <span id="segmentsCount">0</span>
                 </div>
                 
-                <button id="spinButton" class="spin-button no-select">
-                    <i class="fas fa-redo-alt"></i> <span class="btn-text">Крутить колесо</span>
+                <button id="spinButton" class="spin-button">
+                    <i class="fas fa-redo-alt"></i> Крутить колесо
                 </button>
                 
                 <div class="result">
@@ -706,7 +724,7 @@
             
             <section class="controls-section">
                 <div class="panel">
-                    <h2 class="no-select"><i class="fas fa-id-card"></i> Управление по ID</h2>
+                    <h2><i class="fas fa-id-card"></i> Управление наборами</h2>
                     
                     <div class="id-controls">
                         <div class="input-group">
@@ -714,14 +732,14 @@
                             <div class="id-input-group">
                                 <input type="text" id="loadIdInput" placeholder="Введите ID набора" maxlength="20">
                                 <button id="loadBtn" class="btn-primary">
-                                    <i class="fas fa-download"></i> <span class="btn-text">Загрузить</span>
+                                    <i class="fas fa-download"></i> Загрузить
                                 </button>
                             </div>
-                            <div class="id-suggestions no-select">
-                                Попробуйте: 
+                            <div class="id-suggestions">
+                                Быстрая загрузка: 
                                 <span class="id-suggestion" data-id="EXAMPLE">EXAMPLE</span>
-                                <span class="id-suggestion" data-id="PRIZES">PRIZES</span>
-                                <span class="id-suggestion" data-id="ACTIVITY">ACTIVITY</span>
+                                <span class="id-suggestion" data-id="TECH">TECH</span>
+                                <span class="id-suggestion" data-id="TEST">TEST</span>
                             </div>
                         </div>
                         
@@ -732,72 +750,127 @@
                                     <div>ID: <span class="id-value" id="currentId">---</span></div>
                                     <small>Сохраните этот ID для загрузки набора позже</small>
                                 </div>
-                                <button id="copyIdBtn" class="copy-btn no-select">
-                                    <i class="far fa-copy"></i> <span class="btn-text">Копировать</span>
+                                <button id="copyIdBtn" class="copy-btn">
+                                    <i class="far fa-copy"></i> Копировать
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div class="database-stats">
+                            <div><i class="fas fa-database"></i> Статус: <span id="dbStatus">Загрузка...</span></div>
+                            <div>Наборов в облаке: <span id="dbCount">0</span></div>
+                            <div class="db-action-buttons">
+                                <button id="publicWheelsBtn" class="db-action-btn btn-cloud">
+                                    <i class="fas fa-list"></i> Публичные наборы
+                                </button>
+                                <button id="saveToCloudBtn" class="db-action-btn btn-cloud">
+                                    <i class="fas fa-cloud-upload-alt"></i> Сохранить в облако
+                                </button>
+                                <button id="saveToLocalBtn" class="db-action-btn btn-local">
+                                    <i class="fas fa-save"></i> Сохранить локально
                                 </button>
                             </div>
                         </div>
                         
                         <div class="actions">
-                            <button id="saveBtn" class="action-btn btn-info no-select">
-                                <i class="fas fa-save"></i> <span class="btn-text">Сохранить</span>
+                            <button id="saveBtn" class="action-btn btn-info">
+                                <i class="fas fa-save"></i> Сохранить набор
                             </button>
-                            <button id="newIdBtn" class="action-btn btn-warning no-select">
-                                <i class="fas fa-plus"></i> <span class="btn-text">Новый набор</span>
+                            <button id="newIdBtn" class="action-btn btn-warning">
+                                <i class="fas fa-plus"></i> Новый набор
                             </button>
                         </div>
                     </div>
                 </div>
                 
                 <div class="panel">
-                    <h2 class="no-select"><i class="fas fa-edit"></i> Управление значениями</h2>
+                    <h2><i class="fas fa-edit"></i> Управление значениями</h2>
                     
                     <div class="input-group">
                         <p>Добавьте значение в текущий набор:</p>
                         <div class="input-container">
                             <input type="text" id="newValue" placeholder="Введите значение" maxlength="100">
-                            <button id="addBtn" class="btn-primary">
-                                <i class="fas fa-plus"></i> <span class="btn-text">Добавить</span>
-                            </button>
+                            <button id="addBtn" class="btn-primary">Добавить</button>
                         </div>
                         <small>Можно добавлять неограниченное количество значений</small>
                     </div>
                     
-                    <h3 class="no-select"><i class="fas fa-list"></i> Список значений (<span id="valuesCount">0</span>)</h3>
+                    <h3><i class="fas fa-list"></i> Список значений (<span id="valuesCount">0</span>)</h3>
                     <div class="values-list" id="valuesList">
                         <div class="empty-message">Пока нет значений. Добавьте первое!</div>
                     </div>
                     
                     <div class="actions">
-                        <button id="clearBtn" class="action-btn btn-danger no-select">
-                            <i class="fas fa-trash-alt"></i> <span class="btn-text">Очистить всё</span>
+                        <button id="clearBtn" class="action-btn btn-danger">
+                            <i class="fas fa-trash-alt"></i> Очистить всё
                         </button>
-                        <button id="exampleBtn" class="action-btn btn-info no-select">
-                            <i class="fas fa-magic"></i> <span class="btn-text">Примеры</span>
+                        <button id="exampleBtn" class="action-btn btn-info">
+                            <i class="fas fa-magic"></i> Примеры
                         </button>
                     </div>
                 </div>
             </section>
         </div>
         
-        <footer class="no-select">
-            <p>Колесо Фортуны &copy; 2026. Все права защищены. Сайт создан - TikarTech</p>
+        <footer>
+            <p>Колесо Фортуны с облачной Базой Данных &copy; 2023 | Все ID сохраняются в Firebase Realtime Database</p>
         </footer>
     </div>
 
     <div id="notification" class="notification"></div>
+    
+    <!-- Модальное окно для публичных наборов -->
+    <div id="publicWheelsModal" class="modal-overlay">
+        <div class="modal">
+            <h3><i class="fas fa-globe"></i> Публичные наборы</h3>
+            <div class="modal-content">
+                <p>Выберите набор для загрузки:</p>
+                <div class="public-wheels-list" id="publicWheelsList">
+                    <div class="empty-message">Загрузка публичных наборов...</div>
+                </div>
+            </div>
+            <div class="modal-actions">
+                <button id="closePublicWheelsBtn" class="modal-btn modal-btn-secondary">Закрыть</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Модальное окно для подтверждения сохранения -->
+    <div id="saveConfirmModal" class="modal-overlay">
+        <div class="modal">
+            <h3><i class="fas fa-cloud-upload-alt"></i> Сохранить в облако</h3>
+            <div class="modal-content">
+                <p>Сохранить набор "<span id="saveModalId"></span>" в облачную базу данных?</p>
+                <p>Значений: <span id="saveModalCount"></span></p>
+                <div class="input-group">
+                    <label for="wheelDescription">Описание (необязательно):</label>
+                    <input type="text" id="wheelDescription" placeholder="Краткое описание набора" maxlength="100">
+                </div>
+                <div class="input-group">
+                    <label>
+                        <input type="checkbox" id="makePublic"> Сделать публичным (доступно всем)
+                    </label>
+                </div>
+            </div>
+            <div class="modal-actions">
+                <button id="cancelSaveBtn" class="modal-btn modal-btn-secondary">Отмена</button>
+                <button id="confirmSaveBtn" class="modal-btn modal-btn-primary">Сохранить</button>
+            </div>
+        </div>
+    </div>
 
     <script>
-        // Добавляем обработчик для предотвращения масштабирования при двойном тапе
-        let lastTouchEnd = 0;
-        document.addEventListener('touchend', function(event) {
-            const now = (new Date()).getTime();
-            if (now - lastTouchEnd <= 300) {
-                event.preventDefault();
-            }
-            lastTouchEnd = now;
-        }, false);
-
+        // Конфигурация Firebase
+        const firebaseConfig = {
+            apiKey: "AIzaSyCLaVZI6uBXG7hAPysSDUdJAfmC2CHiNx8",
+            authDomain: "fortune-wheel-db.firebaseapp.com",
+            databaseURL: "https://fortune-wheel-db-default-rtdb.firebaseio.com",
+            projectId: "fortune-wheel-db",
+            storageBucket: "fortune-wheel-db.appspot.com",
+            messagingSenderId: "47848733591",
+            appId: "1:47848733591:web:9d7c5118d6b9c3ac28a7f0"
+        };
+        
         // Начальные значения
         let values = [];
         let currentId = null;
@@ -805,32 +878,13 @@
         let isSpinning = false;
         let currentRotation = 0;
         
-        // Генерация цветовой палитры
-        function generateColors(count) {
-            const baseColors = [
-                '#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF', 
-                '#FF9F40', '#8AC926', '#1982C4', '#6A4C93', '#F15BB5',
-                '#FF595E', '#6A0572', '#00BBF9', '#00F5D4', '#FB5607',
-                '#8338EC', '#3A86FF', '#FF006E', '#06D6A0', '#118AB2'
-            ];
-            
-            if (count <= baseColors.length) {
-                return baseColors.slice(0, count);
-            }
-            
-            const generatedColors = [...baseColors];
-            for (let i = baseColors.length; i < count; i++) {
-                const hue = Math.floor(Math.random() * 360);
-                const saturation = 70 + Math.floor(Math.random() * 20);
-                const lightness = 50 + Math.floor(Math.random() * 20);
-                generatedColors.push(`hsl(${hue}, ${saturation}%, ${lightness}%)`);
-            }
-            
-            return generatedColors;
-        }
+        // Firebase
+        let firebaseApp;
+        let database;
+        let isFirebaseConnected = false;
         
-        // Имитация базы данных
-        let wheelDatabase = {};
+        // Локальная база данных для работы оффлайн
+        let localDatabase = {};
         
         // Элементы DOM
         const wheel = document.getElementById('wheel');
@@ -852,12 +906,142 @@
         const valuesCount = document.getElementById('valuesCount');
         const segmentsCount = document.getElementById('segmentsCount');
         const notification = document.getElementById('notification');
+        const firebaseStatus = document.getElementById('firebaseStatus');
+        const dbStatus = document.getElementById('dbStatus');
+        const dbCount = document.getElementById('dbCount');
+        const saveToCloudBtn = document.getElementById('saveToCloudBtn');
+        const saveToLocalBtn = document.getElementById('saveToLocalBtn');
+        const publicWheelsBtn = document.getElementById('publicWheelsBtn');
         
-        // Инициализация
+        // Модальные окна
+        const publicWheelsModal = document.getElementById('publicWheelsModal');
+        const publicWheelsList = document.getElementById('publicWheelsList');
+        const closePublicWheelsBtn = document.getElementById('closePublicWheelsBtn');
+        const saveConfirmModal = document.getElementById('saveConfirmModal');
+        const saveModalId = document.getElementById('saveModalId');
+        const saveModalCount = document.getElementById('saveModalCount');
+        const wheelDescription = document.getElementById('wheelDescription');
+        const makePublic = document.getElementById('makePublic');
+        const cancelSaveBtn = document.getElementById('cancelSaveBtn');
+        const confirmSaveBtn = document.getElementById('confirmSaveBtn');
+        
+        // Инициализация Firebase
+        function initializeFirebase() {
+            try {
+                firebaseApp = firebase.initializeApp(firebaseConfig);
+                database = firebase.database();
+                
+                // Слушаем статус подключения
+                const connectedRef = database.ref(".info/connected");
+                connectedRef.on("value", function(snap) {
+                    isFirebaseConnected = snap.val() === true;
+                    updateFirebaseStatus();
+                    
+                    if (isFirebaseConnected) {
+                        // При подключении загружаем количество наборов
+                        loadDatabaseStats();
+                    }
+                });
+                
+                // Загружаем локальную базу данных
+                loadLocalDatabase();
+                
+            } catch (error) {
+                console.error("Ошибка инициализации Firebase:", error);
+                firebaseStatus.innerHTML = '<i class="fas fa-exclamation-triangle"></i> Ошибка Firebase';
+                firebaseStatus.className = 'firebase-status disconnected';
+                dbStatus.textContent = "Ошибка подключения";
+                showNotification("Ошибка подключения к облаку. Работаем в локальном режиме.", "warning");
+            }
+        }
+        
+        // Обновление статуса Firebase
+        function updateFirebaseStatus() {
+            if (isFirebaseConnected) {
+                firebaseStatus.innerHTML = '<i class="fas fa-cloud"></i> Подключено к облаку';
+                firebaseStatus.className = 'firebase-status connected';
+                dbStatus.textContent = "Подключено";
+            } else {
+                firebaseStatus.innerHTML = '<i class="fas fa-cloud-slash"></i> Оффлайн режим';
+                firebaseStatus.className = 'firebase-status disconnected';
+                dbStatus.textContent = "Оффлайн";
+            }
+        }
+        
+        // Загрузка статистики базы данных
+        function loadDatabaseStats() {
+            if (!database) return;
+            
+            database.ref('wheels').once('value')
+                .then((snapshot) => {
+                    const count = snapshot.numChildren();
+                    dbCount.textContent = count;
+                })
+                .catch((error) => {
+                    console.error("Ошибка загрузки статистики:", error);
+                });
+        }
+        
+        // Загрузка локальной базы данных
+        function loadLocalDatabase() {
+            const savedDatabase = localStorage.getItem('localWheelDatabase');
+            if (savedDatabase) {
+                try {
+                    localDatabase = JSON.parse(savedDatabase);
+                    console.log("Локальная база данных загружена:", Object.keys(localDatabase).length, "наборов");
+                } catch (e) {
+                    console.error("Ошибка загрузки локальной базы данных:", e);
+                    localDatabase = {};
+                }
+            } else {
+                localDatabase = {};
+            }
+            
+            // Загружаем предустановленные примеры
+            preloadExamples();
+        }
+        
+        // Сохранение локальной базы данных
+        function saveLocalDatabase() {
+            localStorage.setItem('localWheelDatabase', JSON.stringify(localDatabase));
+        }
+        
+        // Генерация цветовой палитры
+        function generateColors(count) {
+            const baseColors = [
+                '#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF', 
+                '#FF9F40', '#8AC926', '#1982C4', '#6A4C93', '#F15BB5',
+                '#FF595E', '#6A0572', '#00BBF9', '#00F5D4', '#FB5607',
+                '#8338EC', '#3A86FF', '#FF006E', '#FB5607', '#8338EC',
+                '#3A86FF', '#FF006E', '#06D6A0', '#118AB2', '#EF476F',
+                '#073B4C', '#7209B7', '#F72585', '#4361EE', '#4CC9F0',
+                '#B5179E', '#560BAD', '#480CA8', '#3A0CA3', '#3F37C9'
+            ];
+            
+            if (count <= baseColors.length) {
+                return baseColors.slice(0, count);
+            }
+            
+            const generatedColors = [...baseColors];
+            for (let i = baseColors.length; i < count; i++) {
+                const hue = Math.floor(Math.random() * 360);
+                const saturation = 70 + Math.floor(Math.random() * 20);
+                const lightness = 50 + Math.floor(Math.random() * 20);
+                generatedColors.push(`hsl(${hue}, ${saturation}%, ${lightness}%)`);
+            }
+            
+            return generatedColors;
+        }
+        
+        // Инициализация приложения
         document.addEventListener('DOMContentLoaded', function() {
+            // Инициализируем Firebase
+            initializeFirebase();
+            
             // Загружаем данные из localStorage
             loadFromLocalStorage();
             
+            // Генерируем новый ID при первой загрузке
             if (!currentId) {
                 generateNewId();
             }
@@ -881,7 +1065,12 @@
             newIdButton.addEventListener('click', createNewWheel);
             copyIdButton.addEventListener('click', copyIdToClipboard);
             
-            // Обработчики для подсказок ID
+            // Обработчики для кнопок базы данных
+            saveToCloudBtn.addEventListener('click', showSaveToCloudModal);
+            saveToLocalBtn.addEventListener('click', saveWheelToLocal);
+            publicWheelsBtn.addEventListener('click', showPublicWheelsModal);
+            
+            // Добавляем обработчики для подсказок ID
             document.querySelectorAll('.id-suggestion').forEach(suggestion => {
                 suggestion.addEventListener('click', function() {
                     const id = this.getAttribute('data-id');
@@ -890,39 +1079,26 @@
                 });
             });
             
-            // Загружаем базу данных из localStorage
-            const savedDatabase = localStorage.getItem('wheelDatabase');
-            if (savedDatabase) {
-                wheelDatabase = JSON.parse(savedDatabase);
-            }
+            // Обработчики для модальных окон
+            closePublicWheelsBtn.addEventListener('click', () => {
+                publicWheelsModal.classList.remove('show');
+            });
             
-            // Предзагружаем примеры
-            preloadExamples();
+            cancelSaveBtn.addEventListener('click', () => {
+                saveConfirmModal.classList.remove('show');
+            });
             
-            // Адаптация для мобильных устройств
-            setupMobileOptimizations();
+            confirmSaveBtn.addEventListener('click', saveWheelToCloud);
+            
+            // Закрытие модальных окон по клику вне окна
+            [publicWheelsModal, saveConfirmModal].forEach(modal => {
+                modal.addEventListener('click', (e) => {
+                    if (e.target === modal) {
+                        modal.classList.remove('show');
+                    }
+                });
+            });
         });
-        
-        function setupMobileOptimizations() {
-            // Улучшение реакции на тапы
-            const buttons = document.querySelectorAll('button');
-            buttons.forEach(button => {
-                button.addEventListener('touchstart', function() {
-                    this.style.transform = 'scale(0.98)';
-                });
-                
-                button.addEventListener('touchend', function() {
-                    this.style.transform = '';
-                });
-            });
-            
-            // Закрытие клавиатуры при клике вне поля ввода
-            document.addEventListener('touchstart', function(e) {
-                if (e.target.tagName !== 'INPUT' && e.target.tagName !== 'TEXTAREA') {
-                    document.activeElement.blur();
-                }
-            });
-        }
         
         // Генерация нового ID
         function generateNewId() {
@@ -954,13 +1130,14 @@
                 text.setAttribute('y', '250');
                 text.setAttribute('text-anchor', 'middle');
                 text.setAttribute('fill', 'white');
-                text.setAttribute('font-size', '20');
+                text.setAttribute('font-size', '24');
                 text.textContent = 'Добавьте значения';
                 wheel.appendChild(text);
                 return;
             }
             
             colors = generateColors(values.length);
+            
             const angleStep = 360 / values.length;
             const radius = 240;
             const centerX = 250;
@@ -995,13 +1172,13 @@
                 path.setAttribute('data-index', i);
                 wheel.appendChild(path);
                 
-                if (values.length <= 25) {
+                if (values.length <= 30) {
                     const textAngle = (startAngle + endAngle) / 2;
                     const textRad = (textAngle - 90) * Math.PI / 180;
                     
                     let textRadius = radius * 0.7;
-                    if (values.length > 15) textRadius = radius * 0.75;
                     if (values.length > 20) textRadius = radius * 0.8;
+                    if (values.length > 25) textRadius = radius * 0.85;
                     
                     const textX = centerX + textRadius * Math.cos(textRad);
                     const textY = centerY + textRadius * Math.sin(textRad);
@@ -1013,17 +1190,18 @@
                     text.setAttribute('fill', getContrastColor(colors[i]));
                     text.setAttribute('font-weight', 'bold');
                     
-                    let fontSize = 14;
-                    if (values.length > 12) fontSize = 12;
-                    if (values.length > 18) fontSize = 10;
-                    if (values.length > 22) fontSize = 8;
+                    let fontSize = 16;
+                    if (values.length > 15) fontSize = 14;
+                    if (values.length > 20) fontSize = 12;
+                    if (values.length > 25) fontSize = 10;
                     
                     text.setAttribute('font-size', fontSize);
                     text.setAttribute('transform', `rotate(${textAngle} ${textX} ${textY})`);
                     
-                    let maxLength = 12;
+                    let maxLength = 15;
                     if (values.length > 15) maxLength = 10;
                     if (values.length > 20) maxLength = 8;
+                    if (values.length > 25) maxLength = 6;
                     
                     let textContent = values[i];
                     if (/^\d+$/.test(values[i].trim())) {
@@ -1051,10 +1229,12 @@
             const r = parseInt(hex.substr(0, 2), 16);
             const g = parseInt(hex.substr(2, 2), 16);
             const b = parseInt(hex.substr(4, 2), 16);
+            
             const yiq = ((r * 299) + (g * 587) + (b * 114)) / 1000;
             return (yiq >= 128) ? '#000' : '#fff';
         }
         
+        // Рендер списка значений
         function renderValuesList() {
             valuesList.innerHTML = '';
             valuesCount.textContent = values.length;
@@ -1086,6 +1266,7 @@
             });
         }
         
+        // Добавление нового значения
         function addValue() {
             const newValue = newValueInput.value.trim();
             
@@ -1101,11 +1282,9 @@
             saveCurrentToLocalStorage();
             
             showNotification(`Добавлено значение. Всего: ${values.length}`);
-            
-            // Фокус остается на поле ввода для быстрого добавления
-            setTimeout(() => newValueInput.focus(), 100);
         }
         
+        // Удаление значения
         function removeValue(index) {
             const removedValue = values[index];
             values.splice(index, 1);
@@ -1115,6 +1294,7 @@
             showNotification(`Удалено: "${removedValue}"`);
         }
         
+        // Очистка всех значений
         function clearAllValues() {
             if (values.length === 0) return;
             
@@ -1130,10 +1310,12 @@
             }
         }
         
+        // Загрузка примеров значений
         function loadExampleValues() {
             const exampleValues = [
                 "Пицца", "Кино", "Ресторан", "Прогулка", "Кофе", "Книга", "Игра", "Спорт",
-                "Велосипед", "Йога", "Танцы", "Рисование", "Пение", "Готовка", "Шоппинг"
+                "Велосипед", "Йога", "Танцы", "Рисование", "Пение", "Готовка", "Шоппинг",
+                "Музей", "Театр", "Концерт", "Выставка", "Фестиваль", "Пикник", "Пляж"
             ];
             
             if (values.length > 0 && !confirm(`Заменить текущие ${values.length} значений примерами (${exampleValues.length} вариантов)?`)) {
@@ -1147,6 +1329,7 @@
             showNotification(`Загружены примеры значений (${exampleValues.length} вариантов)`);
         }
         
+        // Вращение колеса
         function spinWheel() {
             if (isSpinning || values.length < 2) {
                 if (values.length < 2) {
@@ -1180,9 +1363,17 @@
                 
                 isSpinning = false;
                 spinButton.disabled = false;
+                
+                if (segmentIndex === winningSegment) {
+                    console.log("✓ Совпадение: расчетный индекс совпал с выбранным");
+                } else {
+                    console.warn("⚠ Несовпадение: расчетный индекс не совпал с выбранным");
+                    debugInfo.textContent += ` (ожидался: ${winningSegment})`;
+                }
             }, 4000);
         }
         
+        // Загрузка набора по ID
         function loadById() {
             const idToLoad = loadIdInput.value.trim().toUpperCase();
             
@@ -1191,8 +1382,59 @@
                 return;
             }
             
-            if (!wheelDatabase[idToLoad]) {
-                showNotification(`Набор с ID "${idToLoad}" не найден`, 'error');
+            // Сначала пробуем загрузить из облака
+            if (isFirebaseConnected) {
+                loadFromCloud(idToLoad);
+            } else {
+                // Если оффлайн, пробуем загрузить из локальной базы
+                loadFromLocalDatabase(idToLoad);
+            }
+        }
+        
+        // Загрузка из облачной базы данных
+        function loadFromCloud(id) {
+            database.ref('wheels/' + id).once('value')
+                .then((snapshot) => {
+                    if (!snapshot.exists()) {
+                        // Если не найдено в облаке, пробуем локально
+                        loadFromLocalDatabase(id);
+                        return;
+                    }
+                    
+                    const wheelData = snapshot.val();
+                    
+                    if (values.length > 0 && !confirm('Текущий набор будет заменен. Продолжить?')) {
+                        return;
+                    }
+                    
+                    values = [...wheelData.values];
+                    currentId = id;
+                    currentIdDisplay.textContent = currentId;
+                    
+                    renderWheel();
+                    renderValuesList();
+                    loadIdInput.value = '';
+                    
+                    saveCurrentToLocalStorage();
+                    
+                    const desc = wheelData.description ? ` (${wheelData.description})` : '';
+                    showNotification(`Набор "${id}" загружен из облака${desc}`);
+                    
+                    // Обновляем статистику
+                    loadDatabaseStats();
+                })
+                .catch((error) => {
+                    console.error("Ошибка загрузки из облака:", error);
+                    showNotification('Ошибка загрузки из облака', 'error');
+                    // Пробуем загрузить из локальной базы
+                    loadFromLocalDatabase(id);
+                });
+        }
+        
+        // Загрузка из локальной базы данных
+        function loadFromLocalDatabase(id) {
+            if (!localDatabase[id]) {
+                showNotification(`Набор с ID "${id}" не найден`, 'error');
                 return;
             }
             
@@ -1200,34 +1442,163 @@
                 return;
             }
             
-            values = [...wheelDatabase[idToLoad].values];
-            currentId = idToLoad;
+            values = [...localDatabase[id].values];
+            currentId = id;
             currentIdDisplay.textContent = currentId;
             
             renderWheel();
             renderValuesList();
             loadIdInput.value = '';
+            
             saveCurrentToLocalStorage();
             
-            showNotification(`Набор "${idToLoad}" успешно загружен (${values.length} значений)`);
+            const desc = localDatabase[id].description ? ` (${localDatabase[id].description})` : '';
+            showNotification(`Набор "${id}" загружен локально${desc}`);
         }
         
+        // Сохранение текущего набора (локально)
         function saveWheel() {
             if (values.length === 0) {
                 showNotification('Нельзя сохранить пустой набор', 'error');
                 return;
             }
             
-            wheelDatabase[currentId] = {
+            // Сохраняем в локальную базу данных
+            localDatabase[currentId] = {
                 values: [...values],
                 savedAt: new Date().toISOString(),
-                count: values.length
+                count: values.length,
+                description: `Набор из ${values.length} значений`
             };
             
-            localStorage.setItem('wheelDatabase', JSON.stringify(wheelDatabase));
-            showNotification(`Набор сохранен с ID: ${currentId} (${values.length} значений)`);
+            saveLocalDatabase();
+            
+            showNotification(`Набор сохранен локально с ID: ${currentId} (${values.length} значений)`);
         }
         
+        // Сохранение в локальную базу данных (кнопка)
+        function saveWheelToLocal() {
+            if (values.length === 0) {
+                showNotification('Нельзя сохранить пустой набор', 'error');
+                return;
+            }
+            
+            // Сохраняем в локальную базу данных
+            localDatabase[currentId] = {
+                values: [...values],
+                savedAt: new Date().toISOString(),
+                count: values.length,
+                description: prompt("Введите описание набора (необязательно):", `Набор из ${values.length} значений`) || `Набор из ${values.length} значений`
+            };
+            
+            saveLocalDatabase();
+            
+            showNotification(`Набор "${currentId}" сохранен в локальную базу данных`);
+        }
+        
+        // Показать модальное окно сохранения в облако
+        function showSaveToCloudModal() {
+            if (values.length === 0) {
+                showNotification('Нельзя сохранить пустой набор', 'error');
+                return;
+            }
+            
+            if (!isFirebaseConnected) {
+                showNotification('Нет подключения к интернету. Нельзя сохранить в облако.', 'error');
+                return;
+            }
+            
+            saveModalId.textContent = currentId;
+            saveModalCount.textContent = values.length;
+            wheelDescription.value = `Набор из ${values.length} значений`;
+            makePublic.checked = false;
+            
+            saveConfirmModal.classList.add('show');
+        }
+        
+        // Сохранение в облачную базу данных
+        function saveWheelToCloud() {
+            const description = wheelDescription.value.trim();
+            const isPublic = makePublic.checked;
+            
+            const wheelData = {
+                values: [...values],
+                savedAt: new Date().toISOString(),
+                count: values.length,
+                description: description || `Набор из ${values.length} значений`,
+                isPublic: isPublic,
+                author: "Анонимный пользователь"
+            };
+            
+            // Сохраняем в Firebase
+            database.ref('wheels/' + currentId).set(wheelData)
+                .then(() => {
+                    showNotification(`Набор "${currentId}" сохранен в облачную базу данных!`, 'success');
+                    saveConfirmModal.classList.remove('show');
+                    
+                    // Также сохраняем в локальную базу для оффлайн доступа
+                    localDatabase[currentId] = wheelData;
+                    saveLocalDatabase();
+                    
+                    // Обновляем статистику
+                    loadDatabaseStats();
+                })
+                .catch((error) => {
+                    console.error("Ошибка сохранения в облако:", error);
+                    showNotification('Ошибка сохранения в облако', 'error');
+                });
+        }
+        
+        // Показать модальное окно публичных наборов
+        function showPublicWheelsModal() {
+            if (!isFirebaseConnected) {
+                showNotification('Нет подключения к интернету', 'error');
+                return;
+            }
+            
+            publicWheelsList.innerHTML = '<div class="empty-message">Загрузка публичных наборов...</div>';
+            publicWheelsModal.classList.add('show');
+            
+            // Загружаем публичные наборы из Firebase
+            database.ref('wheels').orderByChild('isPublic').equalTo(true).once('value')
+                .then((snapshot) => {
+                    publicWheelsList.innerHTML = '';
+                    
+                    if (!snapshot.exists() || snapshot.numChildren() === 0) {
+                        publicWheelsList.innerHTML = '<div class="empty-message">Публичные наборы не найдены</div>';
+                        return;
+                    }
+                    
+                    snapshot.forEach((childSnapshot) => {
+                        const id = childSnapshot.key;
+                        const wheelData = childSnapshot.val();
+                        
+                        const item = document.createElement('div');
+                        item.className = 'public-wheel-item';
+                        item.innerHTML = `
+                            <div class="public-wheel-id">${id}</div>
+                            <div class="public-wheel-info">
+                                ${wheelData.description || 'Без описания'} | 
+                                Значений: ${wheelData.count || wheelData.values.length} |
+                                Автор: ${wheelData.author || 'Аноним'}
+                            </div>
+                        `;
+                        
+                        item.addEventListener('click', () => {
+                            loadFromCloud(id);
+                            publicWheelsModal.classList.remove('show');
+                        });
+                        
+                        publicWheelsList.appendChild(item);
+                    });
+                })
+                .catch((error) => {
+                    console.error("Ошибка загрузки публичных наборов:", error);
+                    publicWheelsList.innerHTML = '<div class="empty-message">Ошибка загрузки</div>';
+                });
+        }
+        
+        // Создание нового набора
         function createNewWheel() {
             if (values.length > 0 && !confirm('Создать новый набор? Текущие значения будут потеряны.')) {
                 return;
@@ -1244,51 +1615,27 @@
             showNotification('Создан новый набор');
         }
         
+        // Копирование ID в буфер обмена
         function copyIdToClipboard() {
             if (!currentId) return;
             
-            if (navigator.clipboard && navigator.clipboard.writeText) {
-                navigator.clipboard.writeText(currentId).then(() => {
-                    copyIdButton.innerHTML = '<i class="fas fa-check"></i> <span class="btn-text">Скопировано</span>';
-                    copyIdButton.classList.add('copied');
-                    
-                    setTimeout(() => {
-                        copyIdButton.innerHTML = '<i class="far fa-copy"></i> <span class="btn-text">Копировать</span>';
-                        copyIdButton.classList.remove('copied');
-                    }, 2000);
-                    
-                    showNotification(`ID "${currentId}" скопирован`);
-                }).catch(err => {
-                    fallbackCopyToClipboard();
-                });
-            } else {
-                fallbackCopyToClipboard();
-            }
-        }
-        
-        function fallbackCopyToClipboard() {
-            const textArea = document.createElement("textarea");
-            textArea.value = currentId;
-            textArea.style.position = "fixed";
-            textArea.style.opacity = "0";
-            document.body.appendChild(textArea);
-            textArea.focus();
-            textArea.select();
-            
-            try {
-                const successful = document.execCommand('copy');
-                if (successful) {
-                    showNotification(`ID "${currentId}" скопирован`);
-                } else {
-                    showNotification('Не удалось скопировать ID', 'error');
-                }
-            } catch (err) {
+            navigator.clipboard.writeText(currentId).then(() => {
+                copyIdButton.innerHTML = '<i class="fas fa-check"></i> Скопировано';
+                copyIdButton.classList.add('copied');
+                
+                setTimeout(() => {
+                    copyIdButton.innerHTML = '<i class="far fa-copy"></i> Копировать';
+                    copyIdButton.classList.remove('copied');
+                }, 2000);
+                
+                showNotification(`ID "${currentId}" скопирован в буфер обмена`);
+            }).catch(err => {
                 showNotification('Не удалось скопировать ID', 'error');
-            }
-            
-            document.body.removeChild(textArea);
+                console.error('Ошибка копирования: ', err);
+            });
         }
         
+        // Сохранение текущего набора в LocalStorage
         function saveCurrentToLocalStorage() {
             const data = {
                 id: currentId,
@@ -1297,6 +1644,7 @@
             localStorage.setItem('currentWheel', JSON.stringify(data));
         }
         
+        // Загрузка текущего набора из LocalStorage
         function loadFromLocalStorage() {
             const savedData = localStorage.getItem('currentWheel');
             if (savedData) {
@@ -1306,18 +1654,21 @@
                     values = data.values || [];
                     currentIdDisplay.textContent = currentId;
                 } catch (e) {
-                    console.error('Ошибка загрузки:', e);
+                    console.error('Ошибка загрузки из localStorage:', e);
                     generateNewId();
                 }
             }
         }
         
+        // Показать уведомление
         function showNotification(message, type = 'success') {
             notification.textContent = message;
             notification.className = 'notification';
             
             if (type === 'error') {
                 notification.classList.add('error');
+            } else if (type === 'warning') {
+                notification.classList.add('warning');
             }
             
             notification.classList.add('show');
@@ -1327,32 +1678,45 @@
             }, 3000);
         }
         
+        // Предзагрузка примеров наборов
         function preloadExamples() {
-            if (!wheelDatabase['EXAMPLE']) {
-                wheelDatabase['EXAMPLE'] = {
+            // Примерные наборы для локальной базы
+            if (!localDatabase['EXAMPLE']) {
+                localDatabase['EXAMPLE'] = {
                     values: ["Пицца", "Кино", "Ресторан", "Прогулка", "Кофе", "Книга", "Игра", "Спорт"],
                     savedAt: new Date().toISOString(),
-                    count: 8
+                    count: 8,
+                    description: "Примерный набор развлечений"
                 };
             }
             
-            if (!wheelDatabase['PRIZES']) {
-                wheelDatabase['PRIZES'] = {
-                    values: ["Футболка", "Кружка", "Наушники", "Книга", "Билет в кино", "Скидка 50%", "Флешка", "Шоколадка"],
+            if (!localDatabase['TECH']) {
+                const techValues = [];
+                for (let i = 1; i <= 25; i++) {
+                    techValues.push(`${i}`);
+                }
+                localDatabase['TECH'] = {
+                    values: techValues,
                     savedAt: new Date().toISOString(),
-                    count: 8
+                    count: 25,
+                    description: "Числа от 1 до 25"
                 };
             }
             
-            if (!wheelDatabase['ACTIVITY']) {
-                wheelDatabase['ACTIVITY'] = {
-                    values: ["Йога", "Бег", "Велосипед", "Плавание", "Танцы", "Поход", "Скалолазание", "Фитнес"],
+            if (!localDatabase['TEST']) {
+                const testValues = [];
+                for (let i = 1; i <= 10; i++) {
+                    testValues.push(`Тест ${i}`);
+                }
+                localDatabase['TEST'] = {
+                    values: testValues,
                     savedAt: new Date().toISOString(),
-                    count: 8
+                    count: 10,
+                    description: "Тестовый набор"
                 };
             }
             
-            localStorage.setItem('wheelDatabase', JSON.stringify(wheelDatabase));
+            saveLocalDatabase();
         }
     </script>
 </body>
